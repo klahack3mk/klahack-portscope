@@ -291,7 +291,7 @@ def service_name(port: int) -> str:
 
 
 def classify_connect_code(code: int) -> str:
-    """Map platform-specific connect_ex results into the documented states."""
+    """Map platform-specific TCP connection error codes into documented states."""
     if code == 0:
         return "open"
     if code in REFUSED_CODES:
@@ -339,14 +339,15 @@ def scan_port(ip_text: str, port: int, timeout: float = 1.0, grab_banner: bool =
     with socket.socket(family, socket.SOCK_STREAM) as sock:
         sock.settimeout(timeout)
         try:
-            code = sock.connect_ex(endpoint)
-            state = classify_connect_code(code)
-            if state == "open" and grab_banner:
+            sock.connect(endpoint)
+            state = "open"
+            if grab_banner:
                 banner = _receive_banner(sock, port, ip_text, timeout)
         except socket.timeout:
             state = "filtered"
         except OSError as exc:
-            state = classify_connect_code(exc.errno or -1)
+            error_code = getattr(exc, "winerror", None) or exc.errno or -1
+            state = classify_connect_code(error_code)
     return {
         "port": port,
         "state": state,
