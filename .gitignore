@@ -1,0 +1,22 @@
+# .gitignore | Author: klahack | MIT License
+__pycache__/
+*.py[cod]
+*.pyo
+*.spec
+.pytest_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+build/
+dist/
+.venv/
+venv/
+env/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+.vscode/
+.idea/
