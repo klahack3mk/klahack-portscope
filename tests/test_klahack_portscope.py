@@ -6,6 +6,7 @@ import json
 import socket
 import threading
 import unittest
+from unittest import mock
 
 import klahack_portscope as portscope
 
@@ -91,12 +92,13 @@ class ScannerTests(unittest.TestCase):
         self.assertEqual(result["banner"], "SSH-2.0-test")
 
     def test_closed_state(self):
-        with LoopbackServer() as server:
-            port = server.port
-            open_result = portscope.scan_port("127.0.0.1", port, timeout=1.0)
-        self.assertEqual(open_result["state"], "open")
-        result = portscope.scan_port("127.0.0.1", port, timeout=1.0)
+        refused_socket = mock.MagicMock()
+        refused_socket.__enter__.return_value = refused_socket
+        refused_socket.connect.side_effect = OSError(10061, "connection refused")
+        with mock.patch.object(portscope.socket, "socket", return_value=refused_socket):
+            result = portscope.scan_port("127.0.0.1", 1, timeout=1.0)
         self.assertEqual(result["state"], "closed")
+        refused_socket.__exit__.assert_called_once()
 
 
 class OutputAndSafetyTests(unittest.TestCase):
