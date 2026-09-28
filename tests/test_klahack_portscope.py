@@ -96,7 +96,20 @@ class ScannerTests(unittest.TestCase):
         port = reservation.getsockname()[1]
         reservation.close()
         result = portscope.scan_port("127.0.0.1", port, timeout=1.0)
-        self.assertEqual(result["state"], "closed")
+        diagnostic = ""
+        if result["state"] != "closed":
+            probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            probe.settimeout(1.0)
+            try:
+                probe.connect(("127.0.0.1", port))
+                diagnostic = "diagnostic connection unexpectedly succeeded"
+            except OSError as exc:
+                diagnostic = "exception=%r errno=%r winerror=%r args=%r" % (
+                    type(exc).__name__, exc.errno, getattr(exc, "winerror", None), exc.args
+                )
+            finally:
+                probe.close()
+        self.assertEqual(result["state"], "closed", diagnostic)
 
 
 class OutputAndSafetyTests(unittest.TestCase):
