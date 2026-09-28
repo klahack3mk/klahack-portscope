@@ -91,25 +91,12 @@ class ScannerTests(unittest.TestCase):
         self.assertEqual(result["banner"], "SSH-2.0-test")
 
     def test_closed_state(self):
-        reservation = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        reservation.bind(("127.0.0.1", 0))
-        port = reservation.getsockname()[1]
-        reservation.close()
+        with LoopbackServer() as server:
+            port = server.port
+            open_result = portscope.scan_port("127.0.0.1", port, timeout=1.0)
+        self.assertEqual(open_result["state"], "open")
         result = portscope.scan_port("127.0.0.1", port, timeout=1.0)
-        diagnostic = ""
-        if result["state"] != "closed":
-            probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            probe.settimeout(1.0)
-            try:
-                probe.connect(("127.0.0.1", port))
-                diagnostic = "diagnostic connection unexpectedly succeeded"
-            except OSError as exc:
-                diagnostic = "exception=%r errno=%r winerror=%r args=%r" % (
-                    type(exc).__name__, exc.errno, getattr(exc, "winerror", None), exc.args
-                )
-            finally:
-                probe.close()
-        self.assertEqual(result["state"], "closed", diagnostic)
+        self.assertEqual(result["state"], "closed")
 
 
 class OutputAndSafetyTests(unittest.TestCase):
