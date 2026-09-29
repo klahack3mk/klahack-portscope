@@ -3,589 +3,2773 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="klahack-portscope is a portable, responsible TCP connect scanner by klahack.">
-  <meta name="theme-color" content="#07111f">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="klahack-portscope is a portable, zero-dependency, responsible TCP connect scanner by klahack for authorized defensive audits.">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#08090a">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="klahack-portscope">
-  <meta property="og:description" content="A zero-dependency, cross-platform TCP connect scanner by klahack.">
-  <title>klahack-portscope</title>
+  <meta property="og:title" content="klahack-portscope — scan what you own">
+  <meta property="og:description" content="A zero-dependency, cross-platform TCP connect scanner by klahack. One Python file. Authorized targets only.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308090a'/%3E%3Cpath d='M14 44V20h13a9 9 0 0 1 0 18h-6' stroke='%23c8ff33' stroke-width='6' fill='none' stroke-linecap='square'/%3E%3Ccircle cx='44' cy='42' r='5' fill='%23c8ff33'/%3E%3C/svg%3E">
+  <title>klahack-portscope — portable TCP connect scanning</title>
   <style>
+    /* ============================================================
+       klahack-portscope · original design system
+       Palette: ink black · cream · acid green
+       ============================================================ */
     :root {
-      color-scheme: light dark;
-      --bg: #f4f7fb;
-      --surface: #ffffff;
-      --surface-2: #eaf0f7;
-      --text: #152238;
-      --muted: #53647a;
-      --border: #c8d4e3;
-      --accent: #075fce;
-      --accent-strong: #004ba8;
-      --accent-text: #ffffff;
-      --warning-bg: #fff2d3;
-      --warning-border: #bd6a00;
-      --warning-text: #603500;
-      --terminal: #07111f;
-      --terminal-text: #b8f7d4;
-      --shadow: 0 18px 50px rgba(26, 46, 75, .12);
-      --radius: 18px;
-      --focus: #ff8c00;
+      --ink: #08090a;
+      --ink-2: #101214;
+      --ink-3: #191c1f;
+      --cream: #f3efe3;
+      --cream-2: #e6e0cf;
+      --cream-dim: rgba(243, 239, 227, .62);
+      --cream-faint: rgba(243, 239, 227, .14);
+      --acid: #c8ff33;
+      --acid-deep: #9ad218;
+      --acid-glow: rgba(200, 255, 51, .35);
+      --amber: #ffc46b;
+      --danger: #ff6b5c;
+
+      --sans: "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --display: "Archivo Black", "Arial Black", "Helvetica Neue", Helvetica, Arial, ui-sans-serif, system-ui, sans-serif;
+      --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", Georgia, serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Code", "Cascadia Mono", Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace;
+
+      --gutter: clamp(1.1rem, 4vw, 3.5rem);
+      --maxw: 1320px;
+      --radius: 20px;
+      --pill: 999px;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+      --dur: .7s;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #07111f;
-        --surface: #101d2f;
-        --surface-2: #17263a;
-        --text: #eef5ff;
-        --muted: #afbdd0;
-        --border: #34465d;
-        --accent: #67adff;
-        --accent-strong: #94c5ff;
-        --accent-text: #06101d;
-        --warning-bg: #382a0b;
-        --warning-border: #f3ad3d;
-        --warning-text: #ffdf9d;
-        --terminal: #030913;
-        --terminal-text: #a7f3cb;
-        --shadow: 0 18px 50px rgba(0, 0, 0, .28);
-        --focus: #ffc14f;
-      }
+    html[dir="rtl"] {
+      --display: "Noto Kufi Arabic", "Tajawal", "Cairo", "Segoe UI", Tahoma, "Arial Black", sans-serif;
+      --sans: "Noto Sans Arabic", "Segoe UI", Tahoma, Arial, sans-serif;
+      --serif: "Noto Naskh Arabic", "Traditional Arabic", Georgia, serif;
     }
 
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      scroll-behavior: smooth;
+      scrollbar-color: var(--acid) var(--ink);
+    }
+
     body {
       margin: 0;
-      background:
-        radial-gradient(circle at 10% 0%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 35rem),
-        var(--bg);
-      color: var(--text);
-      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.65;
+      background: var(--ink);
+      color: var(--cream);
+      font-family: var(--sans);
+      font-size: clamp(1rem, .96rem + .2vw, 1.09rem);
+      line-height: 1.62;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
-    a { color: var(--accent); text-underline-offset: .2em; }
-    a:hover { color: var(--accent-strong); }
-    button, a { -webkit-tap-highlight-color: transparent; }
-    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+    body.is-locked { overflow: hidden; }
+
+    img, canvas, svg { display: block; max-width: 100%; }
+
+    a { color: inherit; text-decoration: none; }
+
+    ::selection { background: var(--acid); color: var(--ink); }
+
+    :focus-visible {
+      outline: 3px solid var(--acid);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    .container {
+      width: min(var(--maxw), 100% - (var(--gutter) * 2));
+      margin-inline: auto;
+    }
+
     .skip-link {
       position: fixed;
-      inset-block-start: .75rem;
-      inset-inline-start: .75rem;
-      transform: translateY(-180%);
-      z-index: 100;
-      padding: .65rem 1rem;
-      border-radius: .5rem;
-      background: var(--text);
-      color: var(--bg);
+      inset-block-start: 1rem;
+      inset-inline-start: 1rem;
+      z-index: 400;
+      padding: .8rem 1.2rem;
+      border-radius: var(--pill);
+      background: var(--acid);
+      color: var(--ink);
+      font-weight: 700;
+      transform: translateY(-250%);
+      transition: transform .3s var(--ease);
     }
     .skip-link:focus { transform: translateY(0); }
-    .container { width: min(1120px, calc(100% - 2rem)); margin-inline: auto; }
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-      background: color-mix(in srgb, var(--bg) 88%, transparent);
-      backdrop-filter: blur(14px);
+
+    /* ---------- Typography ---------- */
+    .display {
+      font-family: var(--display);
+      font-weight: 900;
+      line-height: .92;
+      letter-spacing: -.035em;
+      text-transform: uppercase;
+      margin: 0;
     }
-    .nav {
-      min-height: 70px;
+    html[dir="rtl"] .display { letter-spacing: 0; line-height: 1.12; }
+
+    h1.display { font-size: clamp(2.9rem, 11.2vw, 9.5rem); }
+    h2.display { font-size: clamp(2.1rem, 6.4vw, 5rem); }
+    h3 { margin: 0 0 .5rem; font-size: 1.16rem; letter-spacing: -.01em; }
+
+    .accent { color: var(--acid); }
+
+    .italic-serif {
+      font-family: var(--serif);
+      font-style: italic;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: -.02em;
+    }
+    html[dir="rtl"] .italic-serif { font-style: normal; }
+
+    .outline-text {
+      color: transparent;
+      -webkit-text-stroke: 2px var(--cream);
+    }
+    .panel--cream .outline-text { -webkit-text-stroke-color: var(--ink); }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      margin: 0 0 1.4rem;
+      font-family: var(--mono);
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: var(--acid);
+    }
+    .eyebrow::before {
+      content: "";
+      width: .5rem;
+      height: .5rem;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 0 var(--acid-glow);
+      animation: ping 2.4s infinite;
+    }
+    .panel--cream .eyebrow { color: var(--ink); }
+    .panel--acid .eyebrow { color: var(--ink); }
+    @keyframes ping {
+      0% { box-shadow: 0 0 0 0 var(--acid-glow); }
+      70% { box-shadow: 0 0 0 .85rem rgba(200, 255, 51, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(200, 255, 51, 0); }
+    }
+
+    .lede {
+      max-width: 62ch;
+      font-size: clamp(1.05rem, 1rem + .45vw, 1.35rem);
+      color: var(--cream-dim);
+      line-height: 1.6;
+    }
+    .panel--cream .lede { color: rgba(8, 9, 10, .68); }
+    .panel--acid .lede { color: rgba(8, 9, 10, .74); }
+
+    .mono-label {
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+    }
+
+    /* ---------- Panels ---------- */
+    .panel { position: relative; padding-block: clamp(4.5rem, 11vw, 9.5rem); }
+    .panel--dark { background: var(--ink); color: var(--cream); }
+    .panel--ink2 { background: var(--ink-2); color: var(--cream); }
+    .panel--cream { background: var(--cream); color: var(--ink); }
+    .panel--acid { background: var(--acid); color: var(--ink); }
+    .panel--cream a { color: var(--ink); }
+
+    .panel--cream .mono-label { color: rgba(8, 9, 10, .6); }
+
+    .section-head { max-width: 62rem; margin-bottom: clamp(2.4rem, 5vw, 4rem); }
+    .section-head .lede { margin-block: 1.4rem 0; }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: .6rem;
+      padding: .95rem 1.7rem;
+      border: 1.5px solid var(--cream-faint);
+      border-radius: var(--pill);
+      background: transparent;
+      color: inherit;
+      font-family: var(--sans);
+      font-size: .95rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+      cursor: pointer;
+      overflow: hidden;
+      isolation: isolate;
+      transition: color .35s var(--ease), border-color .35s var(--ease), transform .25s var(--ease);
+      will-change: transform;
+    }
+    .btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--acid);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform .45s var(--ease);
+    }
+    .btn:hover, .btn:focus-visible { color: var(--ink); border-color: var(--acid); }
+    .btn:hover::after, .btn:focus-visible::after { transform: scaleY(1); }
+    .btn--solid { background: var(--acid); border-color: var(--acid); color: var(--ink); }
+    .btn--solid::after { background: var(--cream); }
+    .btn--solid:hover, .btn--solid:focus-visible { color: var(--ink); border-color: var(--cream); }
+    .btn--sm { padding: .6rem 1.05rem; font-size: .8rem; }
+    .panel--cream .btn { border-color: rgba(8, 9, 10, .18); }
+    .panel--cream .btn::after { background: var(--ink); }
+    .panel--cream .btn:hover, .panel--cream .btn:focus-visible { color: var(--cream); border-color: var(--ink); }
+    .btn .arrow { transition: transform .35s var(--ease); }
+    .btn:hover .arrow { transform: translateX(.25rem); }
+    html[dir="rtl"] .btn .arrow { transform: scaleX(-1); }
+    html[dir="rtl"] .btn:hover .arrow { transform: scaleX(-1) translateX(.25rem); }
+
+    /* ---------- Loader ---------- */
+    .loader {
+      position: fixed;
+      inset: 0;
+      z-index: 500;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      padding: clamp(1.2rem, 4vw, 3rem);
+      background: var(--ink);
+      color: var(--cream);
+    }
+    .loader[hidden] { display: none; }
+    .loader.is-done { transform: translateY(-100%); transition: transform 1s var(--ease); }
+    .loader-top { display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+    .loader-mark {
+      font-family: var(--display);
+      font-size: clamp(2rem, 9vw, 7rem);
+      line-height: .9;
+      letter-spacing: -.045em;
+      text-transform: uppercase;
+    }
+    .loader-mark span { color: var(--acid); }
+    .loader-log {
+      font-family: var(--mono);
+      font-size: clamp(.68rem, 2.6vw, .82rem);
+      color: var(--acid);
+      min-height: 7.5em;
+      white-space: pre-wrap;
+      word-break: break-word;
+      opacity: .85;
+    }
+    .loader-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+    .loader-count {
+      font-family: var(--display);
+      font-size: clamp(3rem, 16vw, 11rem);
+      line-height: .82;
+      letter-spacing: -.05em;
+      font-variant-numeric: tabular-nums;
+    }
+    .loader-count sup { font-size: .28em; vertical-align: super; color: var(--acid); }
+    .loader-bar {
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: 0;
+      height: 4px;
+      background: var(--cream-faint);
+    }
+    .loader-bar i { display: block; height: 100%; width: 0; background: var(--acid); }
+
+    /* ---------- Custom cursor ---------- */
+    .cursor-dot, .cursor-ring {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 450;
+      pointer-events: none;
+      border-radius: 50%;
+      mix-blend-mode: difference;
+      opacity: 0;
+      transition: opacity .3s linear;
+    }
+    .cursor-dot { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; background: var(--acid); }
+    .cursor-ring {
+      width: 40px; height: 40px; margin: -20px 0 0 -20px;
+      border: 1.5px solid var(--acid);
+      transition: opacity .3s linear, width .3s var(--ease), height .3s var(--ease), margin .3s var(--ease), background-color .3s var(--ease);
+    }
+    body.cursor-ready .cursor-dot, body.cursor-ready .cursor-ring { opacity: 1; }
+    body.cursor-hot .cursor-ring {
+      width: 76px; height: 76px; margin: -38px 0 0 -38px;
+      background: rgba(200, 255, 51, .18);
+    }
+    body.cursor-hidden .cursor-dot, body.cursor-hidden .cursor-ring { opacity: 0; }
+
+    /* ---------- Header ---------- */
+    .site-header {
+      position: fixed;
+      inset-block-start: 0;
+      inset-inline: 0;
+      z-index: 300;
+      transition: transform .5s var(--ease), background-color .4s linear, border-color .4s linear;
+      border-block-end: 1px solid transparent;
+      background: transparent;
+    }
+    .site-header.is-stuck {
+      background: rgba(8, 9, 10, .82);
+      backdrop-filter: blur(16px) saturate(140%);
+      border-block-end-color: rgba(243, 239, 227, .1);
+    }
+    .site-header.is-hidden { transform: translateY(-105%); }
+    .header-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
+      min-height: 78px;
     }
     .brand {
-      color: var(--text);
-      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-      font-weight: 800;
-      text-decoration: none;
-      letter-spacing: -.03em;
-    }
-    .nav-actions { display: flex; align-items: center; gap: .65rem; }
-    .button, .language-button, .tab, .copy-button {
-      border: 1px solid var(--border);
-      border-radius: .7rem;
-      background: var(--surface);
-      color: var(--text);
-      padding: .65rem .9rem;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .button:hover, .language-button:hover, .tab:hover, .copy-button:hover { background: var(--surface-2); }
-    .button.primary {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: var(--accent-text);
-      text-decoration: none;
-    }
-    .button.primary:hover { background: var(--accent-strong); }
-    .hero {
-      display: grid;
-      grid-template-columns: 1.08fr .92fr;
-      gap: clamp(2rem, 5vw, 5rem);
-      align-items: center;
-      padding-block: clamp(4rem, 10vw, 8rem);
-    }
-    .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: .5rem;
-      margin: 0 0 1rem;
-      color: var(--accent);
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .08em;
-      font-size: .82rem;
+      gap: .55rem;
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: .92rem;
+      letter-spacing: -.01em;
+      color: var(--cream);
     }
-    .eyebrow::before { content: ""; width: 2rem; height: 2px; background: currentColor; }
-    h1, h2, h3 { line-height: 1.15; letter-spacing: -.035em; }
-    h1 { margin: 0; font-size: clamp(2.55rem, 7vw, 5.5rem); overflow-wrap: anywhere; }
-    h2 { margin: 0 0 1rem; font-size: clamp(1.9rem, 4vw, 3rem); }
-    h3 { margin-block: 0 .6rem; font-size: 1.2rem; }
-    .tagline { max-width: 60ch; margin-block: 1.25rem 1.7rem; color: var(--muted); font-size: 1.18rem; }
-    .hero-actions { display: flex; flex-wrap: wrap; gap: .8rem; }
-    .terminal {
-      min-height: 330px;
-      border: 1px solid #2b425b;
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 30px; height: 30px;
+      border-radius: 9px;
+      background: var(--acid);
+      color: var(--ink);
+      font-family: var(--display);
+      font-size: .95rem;
+      line-height: 1;
+    }
+    .brand-dot { width: .4rem; height: .4rem; border-radius: 50%; background: var(--acid); animation: blink 1.6s steps(2) infinite; }
+
+    .nav-links { display: flex; align-items: center; gap: .3rem; }
+    .nav-link {
+      position: relative;
+      padding: .55rem .85rem;
+      border-radius: var(--pill);
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--cream-dim);
+      transition: color .3s var(--ease), background-color .3s var(--ease);
+    }
+    .nav-link::after {
+      content: "";
+      position: absolute;
+      inset-block-end: .35rem;
+      inset-inline-start: 50%;
+      width: 0; height: 2px;
+      background: var(--acid);
+      transform: translateX(-50%);
+      transition: width .35s var(--ease);
+    }
+    .nav-link:hover, .nav-link:focus-visible { color: var(--cream); }
+    .nav-link:hover::after, .nav-link.is-active::after { width: 42%; }
+    .nav-link.is-active { color: var(--cream); }
+
+    .header-actions { display: flex; align-items: center; gap: .5rem; }
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .55rem 1rem;
+      border: 1.5px solid var(--acid);
+      border-radius: var(--pill);
+      background: transparent;
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      cursor: pointer;
+      transition: background-color .3s var(--ease), color .3s var(--ease), transform .25s var(--ease);
+      will-change: transform;
+    }
+    .lang-toggle:hover, .lang-toggle:focus-visible { background: var(--acid); color: var(--ink); }
+    .menu-toggle { display: none; }
+
+    .progress-rail { height: 2px; background: rgba(243, 239, 227, .08); }
+    .progress-rail i { display: block; height: 100%; width: 0; background: var(--acid); transform-origin: left center; }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      position: relative;
+      min-height: 100svh;
+      display: flex;
+      align-items: flex-end;
+      padding-block: clamp(8rem, 18vh, 12rem) clamp(2rem, 6vh, 4rem);
+      overflow: hidden;
+      background: radial-gradient(120% 80% at 70% 10%, rgba(200, 255, 51, .1), transparent 60%), var(--ink);
+    }
+    #scan-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: .95;
+      pointer-events: none;
+    }
+    .hero-veil {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(90deg, rgba(243, 239, 227, .035) 0 1px, transparent 1px 64px),
+        linear-gradient(to top, var(--ink) 4%, rgba(8, 9, 10, .55) 45%, rgba(8, 9, 10, .25) 100%);
+    }
+    .hero-inner { position: relative; z-index: 2; width: 100%; }
+    .hero h1 { margin-block: .3rem .6rem; }
+    .hero h1 .line { display: block; }
+    .hero-lead-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: clamp(1.5rem, 4vw, 3.5rem);
+      align-items: end;
+      margin-block-start: clamp(1.6rem, 4vw, 2.8rem);
+    }
+    .hero-cta { display: flex; flex-wrap: wrap; gap: .8rem; margin-block-start: 1.6rem; }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem .5rem;
+      margin-block-start: 1.4rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .4rem .85rem;
+      border: 1px solid var(--cream-faint);
+      border-radius: var(--pill);
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+      white-space: nowrap;
+    }
+    .chip b { color: var(--acid); font-weight: 700; }
+
+    .scroll-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: .6rem;
+      margin-block-start: clamp(2rem, 5vw, 3.4rem);
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+    }
+    .scroll-hint i {
+      display: block;
+      width: 1px; height: 2.6rem;
+      background: linear-gradient(to bottom, var(--acid), transparent);
+      animation: drop 2.2s var(--ease) infinite;
+    }
+    @keyframes drop {
+      0% { transform: scaleY(0); transform-origin: top; }
+      45% { transform: scaleY(1); transform-origin: top; }
+      55% { transform: scaleY(1); transform-origin: bottom; }
+      100% { transform: scaleY(0); transform-origin: bottom; }
+    }
+    @keyframes blink { 50% { opacity: .15; } }
+
+    /* ---------- Marquee ---------- */
+    .marquee {
+      position: relative;
+      display: flex;
+      overflow: hidden;
+      padding-block: clamp(.9rem, 2.4vw, 1.5rem);
+      background: var(--acid);
+      color: var(--ink);
+      border-block: 2px solid var(--ink);
+      user-select: none;
+    }
+    .marquee--dark { background: var(--ink); color: var(--cream); border-color: rgba(243, 239, 227, .12); }
+    .marquee--dark .marquee-item span:nth-child(2) { color: var(--acid); }
+    .marquee-track {
+      display: flex;
+      flex: 0 0 auto;
+      gap: 2.2rem;
+      padding-inline-end: 2.2rem;
+      white-space: nowrap;
+      will-change: transform;
+    }
+    .marquee-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 2.2rem;
+      font-family: var(--display);
+      font-size: clamp(1.2rem, 4vw, 2.6rem);
+      letter-spacing: -.02em;
+      text-transform: uppercase;
+    }
+    html[dir="rtl"] .marquee-item { letter-spacing: 0; }
+    .marquee-star { color: var(--ink); font-size: .7em; }
+    .marquee--dark .marquee-star { color: var(--acid); }
+
+    /* ---------- Stats ---------- */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1px;
+      background: rgba(243, 239, 227, .12);
+      border: 1px solid rgba(243, 239, 227, .12);
       border-radius: var(--radius);
       overflow: hidden;
-      background: var(--terminal);
-      color: var(--terminal-text);
-      box-shadow: var(--shadow);
+    }
+    .stat {
+      padding: clamp(1.4rem, 3vw, 2.4rem);
+      background: var(--ink);
+      transition: background-color .4s var(--ease);
+    }
+    .stat:hover { background: var(--ink-3); }
+    .stat-num {
+      display: block;
+      font-family: var(--display);
+      font-size: clamp(2.4rem, 6vw, 4.6rem);
+      line-height: .95;
+      letter-spacing: -.045em;
+      color: var(--acid);
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-num small { font-size: .42em; letter-spacing: -.02em; }
+    .stat-label { margin-block-start: .7rem; font-size: .92rem; color: var(--cream-dim); }
+
+    /* ---------- Feature list ---------- */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(.8rem, 1.6vw, 1.2rem);
+    }
+    .feature {
+      position: relative;
+      padding: clamp(1.5rem, 3vw, 2.2rem);
+      border: 1px solid rgba(8, 9, 10, .16);
+      border-radius: var(--radius);
+      background: transparent;
+      overflow: hidden;
+      isolation: isolate;
+      transition: color .45s var(--ease), border-color .45s var(--ease), transform .45s var(--ease);
+    }
+    .feature::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--ink);
+      transform: translateY(101%);
+      transition: transform .55s var(--ease);
+    }
+    .feature:hover, .feature:focus-within {
+      color: var(--cream);
+      border-color: var(--ink);
+      transform: translateY(-6px);
+    }
+    .feature:hover::before, .feature:focus-within::before { transform: translateY(0); }
+    .feature:hover .feature-num, .feature:focus-within .feature-num { color: var(--acid); }
+    .feature:hover p, .feature:focus-within p { color: var(--cream-dim); }
+    .feature-num {
+      display: block;
+      margin-bottom: 1.6rem;
+      font-family: var(--display);
+      font-size: 1.5rem;
+      letter-spacing: -.03em;
+      color: rgba(8, 9, 10, .35);
+      transition: color .45s var(--ease);
+    }
+    .feature h3 { font-size: clamp(1.15rem, 2vw, 1.45rem); }
+    .feature p { margin: 0; color: rgba(8, 9, 10, .66); font-size: .98rem; transition: color .45s var(--ease); }
+
+    /* ---------- Terminal ---------- */
+    .terminal-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+      gap: clamp(1.6rem, 4vw, 3.4rem);
+      align-items: start;
+    }
+    .terminal-shell {
+      position: relative;
+      border: 1px solid rgba(243, 239, 227, .14);
+      border-radius: 18px;
+      background: #06070800;
+      background-color: #050607;
+      box-shadow: 0 40px 90px rgba(0, 0, 0, .55), 0 0 0 1px rgba(200, 255, 51, .06), 0 0 70px rgba(200, 255, 51, .07);
+      overflow: hidden;
       direction: ltr;
       text-align: left;
     }
     .terminal-bar {
       display: flex;
       align-items: center;
-      gap: .45rem;
-      height: 44px;
-      padding-inline: 1rem;
-      border-bottom: 1px solid #26384e;
-      background: #0c1828;
+      gap: .5rem;
+      padding: .75rem 1rem;
+      border-block-end: 1px solid rgba(243, 239, 227, .1);
+      background: #0c0e10;
     }
-    .dot { width: .72rem; height: .72rem; border-radius: 50%; background: #ff665c; }
-    .dot:nth-child(2) { background: #ffc04b; }
-    .dot:nth-child(3) { background: #4ecb71; }
-    .terminal pre {
+    .tdot { width: .62rem; height: .62rem; border-radius: 50%; background: #3a3f44; }
+    .tdot:nth-child(3) { background: var(--acid); }
+    .terminal-title {
+      margin-inline-start: .6rem;
+      font-family: var(--mono);
+      font-size: .72rem;
+      letter-spacing: .06em;
+      color: var(--cream-dim);
+    }
+    .terminal-body {
       margin: 0;
-      padding: 1.25rem;
+      padding: clamp(1rem, 2.4vw, 1.6rem);
+      min-height: 22rem;
+      max-height: 30rem;
+      overflow: auto;
+      font-family: var(--mono);
+      font-size: clamp(.72rem, 1.55vw, .86rem);
+      line-height: 1.75;
+      color: var(--cream);
       white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      font: .9rem/1.75 ui-monospace, "Cascadia Code", Consolas, monospace;
+      word-break: break-word;
+      tab-size: 2;
     }
-    .cursor { display: inline-block; width: .55em; height: 1em; background: currentColor; vertical-align: -.14em; animation: blink 1s steps(2) infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
-    section { padding-block: clamp(3.5rem, 8vw, 6rem); }
-    .section-heading { max-width: 720px; margin-bottom: 2rem; }
-    .section-heading p { color: var(--muted); font-size: 1.06rem; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    .card {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface);
-      padding: 1.4rem;
-      box-shadow: 0 8px 28px color-mix(in srgb, var(--text) 6%, transparent);
+    .terminal-body .t-prompt { color: var(--acid); }
+    .terminal-body .t-brand { color: var(--acid); }
+    .terminal-body .t-warn { color: var(--amber); }
+    .terminal-body .t-head { color: var(--cream); font-weight: 700; }
+    .terminal-body .t-open { color: var(--acid); font-weight: 700; }
+    .terminal-body .t-filtered { color: var(--amber); }
+    .terminal-body .t-closed { color: rgba(243, 239, 227, .45); }
+    .terminal-body .t-key { color: #8fd0ff; }
+    .terminal-body .t-dim { color: rgba(243, 239, 227, .5); }
+    .terminal-body .t-sum { color: var(--acid); }
+    .caret {
+      display: inline-block;
+      width: .55em; height: 1.05em;
+      background: var(--acid);
+      vertical-align: -.18em;
+      animation: blink 1s steps(2) infinite;
     }
-    .icon {
-      display: grid;
-      place-items: center;
-      width: 2.6rem;
-      height: 2.6rem;
-      margin-bottom: 1rem;
-      border-radius: .75rem;
-      background: color-mix(in srgb, var(--accent) 14%, transparent);
-      color: var(--accent);
-      font-weight: 900;
+    .switch-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-block-end: 1rem; }
+    .switch {
+      padding: .5rem 1rem;
+      border: 1px solid rgba(243, 239, 227, .18);
+      border-radius: var(--pill);
+      background: transparent;
+      color: var(--cream-dim);
+      font-family: var(--mono);
+      font-size: .74rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .3s var(--ease);
     }
-    .card p { margin-bottom: 0; color: var(--muted); }
-    .install-shell { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
-    .tabs { display: flex; gap: .3rem; padding: .75rem; overflow-x: auto; border-bottom: 1px solid var(--border); }
-    .tab { flex: 0 0 auto; }
-    .tab[aria-selected="true"] { border-color: var(--accent); background: var(--accent); color: var(--accent-text); }
-    .panel { padding: clamp(1rem, 4vw, 2rem); }
-    .panel[hidden] { display: none; }
-    .command-wrap { position: relative; }
-    .command {
-      margin: 0;
-      padding: 1.25rem 7.2rem 1.25rem 1.25rem;
-      border: 1px solid #2b425b;
-      border-radius: .85rem;
-      overflow-x: auto;
-      background: var(--terminal);
-      color: var(--terminal-text);
-      direction: ltr;
-      text-align: left;
-      font: .9rem/1.6 ui-monospace, "Cascadia Code", Consolas, monospace;
-      white-space: pre;
-    }
-    [dir="rtl"] .command { padding: 1.25rem 1.25rem 1.25rem 7.2rem; }
-    .copy-button { position: absolute; inset-block-start: .65rem; inset-inline-end: .65rem; padding: .45rem .7rem; font-size: .85rem; }
-    .copy-status { min-height: 1.6em; color: var(--accent); font-size: .9rem; font-weight: 700; }
-    .safe {
-      display: grid;
-      grid-template-columns: .75fr 1.25fr;
-      gap: 2rem;
-      align-items: start;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: clamp(1.4rem, 5vw, 2.5rem);
-      background: linear-gradient(135deg, var(--surface), var(--surface-2));
-    }
-    .steps { list-style: none; margin: 0; padding: 0; counter-reset: safe-step; }
-    .steps li { position: relative; padding: .35rem 3rem 1.25rem 0; counter-increment: safe-step; }
-    [dir="rtl"] .steps li { padding: .35rem 0 1.25rem 3rem; }
-    .steps li::before {
-      content: counter(safe-step);
-      position: absolute;
-      inset-inline-end: .5rem;
-      top: .2rem;
-      display: grid;
-      place-items: center;
-      width: 2rem;
-      height: 2rem;
-      border-radius: 50%;
-      background: var(--accent);
-      color: var(--accent-text);
-      font-weight: 800;
-    }
-    .warning {
-      border: 2px solid var(--warning-border);
-      border-radius: var(--radius);
-      background: var(--warning-bg);
-      color: var(--warning-text);
-      padding: clamp(1.4rem, 4vw, 2rem);
-    }
-    .warning h2 { display: flex; align-items: center; gap: .65rem; font-size: clamp(1.45rem, 4vw, 2.2rem); }
-    .warning p { margin-bottom: 0; font-size: 1.08rem; font-weight: 650; }
-    .examples { display: grid; gap: 1rem; }
-    .example-label { margin: 0 0 .5rem; font-weight: 800; }
-    footer { border-top: 1px solid var(--border); padding-block: 2.2rem; color: var(--muted); }
-    .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .switch:hover { color: var(--cream); border-color: var(--cream-dim); }
+    .switch[aria-selected="true"] { background: var(--acid); border-color: var(--acid); color: var(--ink); font-weight: 700; }
+    .terminal-notes { display: grid; gap: 1.1rem; margin-block-start: 1.8rem; }
+    .note-row { display: flex; gap: .85rem; align-items: flex-start; }
+    .note-row span:first-child { color: var(--acid); font-family: var(--mono); font-size: .8rem; padding-block-start: .18rem; }
+    .note-row p { margin: 0; color: var(--cream-dim); font-size: .95rem; }
 
-    @media (max-width: 820px) {
-      .hero, .safe { grid-template-columns: 1fr; }
-      .grid { grid-template-columns: 1fr 1fr; }
-      .hero { padding-block-start: 3rem; }
+    /* ---------- Code blocks ---------- */
+    .code-wrap {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      border: 1px solid rgba(243, 239, 227, .16);
+      border-radius: 14px;
+      background: var(--ink);
+      overflow: hidden;
+      direction: ltr;
     }
-    @media (max-width: 560px) {
-      .grid { grid-template-columns: 1fr; }
-      .nav .button { display: none; }
-      .command { padding-top: 4rem; padding-inline: 1rem; }
-      [dir="rtl"] .command { padding-top: 4rem; padding-inline: 1rem; }
-      .copy-button { inset-inline-end: auto; inset-inline-start: .65rem; }
+    .panel--cream .code-wrap { border-color: rgba(8, 9, 10, .2); }
+    .code-wrap pre {
+      flex: 1 1 auto;
+      margin: 0;
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+      font-family: var(--mono);
+      font-size: clamp(.74rem, 1.7vw, .88rem);
+      line-height: 1.7;
+      color: var(--cream);
     }
+    .code-wrap pre code { color: inherit; }
+    .copy-btn {
+      flex: 0 0 auto;
+      padding-inline: 1.1rem;
+      border: 0;
+      border-inline-start: 1px solid rgba(243, 239, 227, .16);
+      background: transparent;
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background-color .3s var(--ease), color .3s var(--ease);
+    }
+    .copy-btn:hover, .copy-btn:focus-visible { background: var(--acid); color: var(--ink); }
+    .copy-status {
+      min-height: 1.3rem;
+      margin-block-start: .5rem;
+      font-family: var(--mono);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      color: var(--acid);
+    }
+    .panel--cream .copy-status { color: var(--acid-deep); }
+
+    /* ---------- Install ---------- */
+    .install-layout {
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+      gap: clamp(1.6rem, 4vw, 3.4rem);
+      align-items: start;
+    }
+    .os-tabs { display: flex; flex-direction: column; gap: .4rem; }
+    .os-tab {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      width: 100%;
+      padding: 1rem 1.2rem;
+      border: 1px solid rgba(8, 9, 10, .16);
+      border-radius: 14px;
+      background: transparent;
+      color: inherit;
+      font-family: var(--sans);
+      font-size: 1.02rem;
+      font-weight: 700;
+      text-align: start;
+      cursor: pointer;
+      transition: all .35s var(--ease);
+    }
+    .os-tab .os-meta { font-family: var(--mono); font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; opacity: .6; }
+    .os-tab:hover { border-color: var(--ink); transform: translateX(4px); }
+    html[dir="rtl"] .os-tab:hover { transform: translateX(-4px); }
+    .os-tab[aria-selected="true"] { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+    .os-tab[aria-selected="true"] .os-meta { color: var(--acid); opacity: 1; }
+    .os-panel h3 { font-size: clamp(1.3rem, 2.6vw, 1.8rem); }
+    .os-panel p { margin-block: 0 1.1rem; color: rgba(8, 9, 10, .68); }
+
+    /* ---------- Steps ---------- */
+    .steps { counter-reset: step; margin: 0; padding: 0; list-style: none; }
+    .step {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: clamp(1rem, 3vw, 2.6rem);
+      align-items: baseline;
+      padding-block: clamp(1.2rem, 2.6vw, 2rem);
+      border-block-start: 1px solid rgba(243, 239, 227, .14);
+      transition: padding-inline .4s var(--ease);
+    }
+    .step:last-child { border-block-end: 1px solid rgba(243, 239, 227, .14); }
+    .step::after {
+      content: "";
+      position: absolute;
+      inset-block-start: -1px;
+      inset-inline-start: 0;
+      width: 0; height: 1px;
+      background: var(--acid);
+      transition: width .6s var(--ease);
+    }
+    .step:hover::after { width: 100%; }
+    .step:hover { padding-inline-start: .8rem; }
+    .step-num {
+      font-family: var(--display);
+      font-size: clamp(1.6rem, 4vw, 3rem);
+      line-height: 1;
+      letter-spacing: -.04em;
+      color: rgba(243, 239, 227, .3);
+      transition: color .4s var(--ease);
+      font-variant-numeric: tabular-nums;
+    }
+    .step:hover .step-num { color: var(--acid); }
+    .step h3 { font-size: clamp(1.15rem, 2.4vw, 1.7rem); text-transform: uppercase; font-family: var(--display); letter-spacing: -.02em; }
+    html[dir="rtl"] .step h3 { letter-spacing: 0; }
+    .step p { margin: 0; color: var(--cream-dim); max-width: 62ch; }
+
+    /* ---------- Examples ---------- */
+    .examples { display: grid; gap: clamp(1.1rem, 2.4vw, 1.8rem); }
+    .example {
+      padding: clamp(1.2rem, 2.6vw, 1.8rem);
+      border: 1px solid rgba(8, 9, 10, .16);
+      border-radius: var(--radius);
+      transition: border-color .35s var(--ease), background-color .35s var(--ease);
+    }
+    .example:hover { border-color: var(--ink); background: rgba(8, 9, 10, .035); }
+    .example-label { margin: 0 0 .9rem; font-weight: 700; font-size: 1.05rem; }
+    .example-tag {
+      display: inline-block;
+      margin-inline-end: .6rem;
+      padding: .15rem .6rem;
+      border-radius: var(--pill);
+      background: var(--ink);
+      color: var(--acid);
+      font-family: var(--mono);
+      font-size: .66rem;
+      letter-spacing: .12em;
+      vertical-align: .12em;
+    }
+
+    /* ---------- Tables ---------- */
+    .table-wrap {
+      border: 1px solid rgba(243, 239, 227, .14);
+      border-radius: var(--radius);
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    caption { text-align: start; padding: 1rem 1.15rem; font-family: var(--mono); font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--acid); }
+    th, td { padding: .85rem 1.15rem; text-align: start; vertical-align: top; border-block-start: 1px solid rgba(243, 239, 227, .1); }
+    thead th {
+      position: sticky;
+      inset-block-start: 0;
+      background: var(--ink-3);
+      font-family: var(--mono);
+      font-size: .7rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--cream-dim);
+      z-index: 1;
+    }
+    tbody tr { transition: background-color .25s linear; }
+    tbody tr:hover { background: rgba(200, 255, 51, .06); }
+    td code, th code, .inline-code {
+      font-family: var(--mono);
+      font-size: .84em;
+      color: var(--acid);
+      white-space: nowrap;
+      direction: ltr;
+      unicode-bidi: embed;
+    }
+    td.code-cell { white-space: normal; }
+    .panel--cream .inline-code { color: var(--acid-deep); }
+    .num-cell { font-family: var(--mono); color: var(--acid); font-weight: 700; }
+
+    /* ---------- State cards ---------- */
+    .state-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.8rem, 2vw, 1.4rem); }
+    .state-card {
+      position: relative;
+      padding: clamp(1.3rem, 2.8vw, 2rem);
+      border-radius: var(--radius);
+      border: 1px solid rgba(8, 9, 10, .16);
+      overflow: hidden;
+    }
+    .state-card::before {
+      content: "";
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      width: 4px;
+      background: var(--tone, var(--ink));
+    }
+    .state-card h3 { font-family: var(--mono); font-size: .95rem; letter-spacing: .12em; text-transform: uppercase; color: var(--tone, inherit); }
+    .state-card p { margin: 0; color: rgba(8, 9, 10, .7); font-size: .97rem; }
+
+    /* ---------- Output split ---------- */
+    .split-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2.6vw, 2rem); align-items: start; }
+    .bullet-list { margin: 0; padding: 0; list-style: none; display: grid; gap: .85rem; }
+    .bullet-list li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8rem; align-items: baseline; color: var(--cream-dim); }
+    .bullet-list li::before { content: "//"; font-family: var(--mono); font-size: .8rem; color: var(--acid); }
+    .panel--cream .bullet-list li { color: rgba(8, 9, 10, .7); }
+
+    /* ---------- Legal ---------- */
+    .legal-inner { display: grid; gap: clamp(1.6rem, 4vw, 2.6rem); }
+    .legal-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      font-size: clamp(2rem, 6.6vw, 5.2rem);
+    }
+    .legal-sign {
+      display: grid;
+      place-items: center;
+      width: clamp(3rem, 7vw, 5.4rem);
+      aspect-ratio: 1;
+      border: 3px solid var(--ink);
+      border-radius: 50%;
+      font-size: clamp(1.5rem, 4vw, 3rem);
+      animation: pulse-ring 2.6s var(--ease) infinite;
+    }
+    @keyframes pulse-ring {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+    .legal-points { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1rem, 2.4vw, 2rem); }
+    .legal-point { padding-block-start: 1.1rem; border-block-start: 2px solid var(--ink); }
+    .legal-point h3 { font-family: var(--mono); font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; }
+    .legal-point p { margin: 0; font-size: .98rem; color: rgba(8, 9, 10, .78); }
+
+    /* ---------- Footer ---------- */
+    .site-footer { padding-block: clamp(3rem, 7vw, 5.5rem) 2.5rem; background: var(--ink); color: var(--cream); }
+    .footer-mark {
+      font-family: var(--display);
+      font-size: clamp(2.6rem, 15vw, 12rem);
+      line-height: .8;
+      letter-spacing: -.055em;
+      text-transform: uppercase;
+      color: transparent;
+      -webkit-text-stroke: 1.5px rgba(243, 239, 227, .35);
+      margin-block-end: 2.5rem;
+      word-break: break-word;
+    }
+    html[dir="rtl"] .footer-mark { letter-spacing: 0; }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.6rem;
+      padding-block-start: 2rem;
+      border-block-start: 1px solid rgba(243, 239, 227, .14);
+    }
+    .footer-grid h4 { margin: 0 0 .9rem; font-family: var(--mono); font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; color: var(--acid); }
+    .footer-grid ul { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
+    .footer-grid a { color: var(--cream-dim); transition: color .25s linear; }
+    .footer-grid a:hover { color: var(--acid); }
+    .footer-bottom {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-block-start: 2.5rem;
+      padding-block-start: 1.4rem;
+      border-block-start: 1px solid rgba(243, 239, 227, .14);
+      font-family: var(--mono);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      color: var(--cream-dim);
+    }
+
+    /* ---------- Reveal animations ---------- */
+    .reveal { opacity: 0; transform: translateY(34px); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: var(--delay, 0s); }
+    .reveal.is-in { opacity: 1; transform: none; }
+
+    .word { display: inline-block; overflow: hidden; vertical-align: top; }
+    .word > i {
+      display: inline-block;
+      font-style: inherit;
+      transform: translateY(105%) rotate(4deg);
+      opacity: 0;
+      transition: transform .95s var(--ease), opacity .7s linear;
+      transition-delay: var(--wd, 0s);
+    }
+    .split-ready .word > i { transform: translateY(105%) rotate(4deg); }
+    .is-in .word > i, .split-in .word > i { transform: none; opacity: 1; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1080px) {
+      .terminal-layout, .install-layout, .hero-lead-row { grid-template-columns: minmax(0, 1fr); }
+      .feature-grid, .state-grid, .legal-points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .os-tabs { flex-direction: row; flex-wrap: wrap; }
+      .os-tab { width: auto; flex: 1 1 8rem; justify-content: center; text-align: center; }
+      .os-tab .os-meta { display: none; }
+    }
+
+    @media (max-width: 760px) {
+      .nav-links {
+        position: fixed;
+        inset-block-start: 78px;
+        inset-inline: 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 1rem var(--gutter) 2rem;
+        background: rgba(8, 9, 10, .97);
+        backdrop-filter: blur(18px);
+        border-block-end: 1px solid rgba(243, 239, 227, .12);
+        transform: translateY(-120%);
+        transition: transform .5s var(--ease);
+        visibility: hidden;
+      }
+      .nav-links.is-open { transform: translateY(0); visibility: visible; }
+      .nav-link { padding: 1rem .2rem; font-size: 1.3rem; font-family: var(--display); text-transform: uppercase; letter-spacing: -.02em; border-block-end: 1px solid rgba(243, 239, 227, .09); }
+      html[dir="rtl"] .nav-link { letter-spacing: 0; }
+      .nav-link::after { display: none; }
+      .menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .55rem .95rem;
+        border: 1.5px solid var(--cream-faint);
+        border-radius: var(--pill);
+        background: transparent;
+        color: var(--cream);
+        font-family: var(--mono);
+        font-size: .74rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+      .menu-toggle .bars { display: grid; gap: 3px; }
+      .menu-toggle .bars i { display: block; width: 16px; height: 1.5px; background: var(--acid); transition: transform .3s var(--ease), opacity .3s linear; }
+      .menu-toggle[aria-expanded="true"] .bars i:first-child { transform: translateY(4.5px) rotate(45deg); }
+      .menu-toggle[aria-expanded="true"] .bars i:nth-child(2) { opacity: 0; }
+      .menu-toggle[aria-expanded="true"] .bars i:last-child { transform: translateY(-4.5px) rotate(-45deg); }
+      .feature-grid, .state-grid, .legal-points, .split-2 { grid-template-columns: minmax(0, 1fr); }
+      .hero { min-height: auto; padding-block: 7.5rem 3.5rem; }
+      .step { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
+      .step-num { font-size: 1.4rem; }
+      .terminal-body { min-height: 17rem; }
+      .footer-grid { grid-template-columns: minmax(0, 1fr); }
+      .cursor-dot, .cursor-ring { display: none; }
+    }
+
+    @media (max-width: 420px) {
+      .stats-grid { grid-template-columns: minmax(0, 1fr); }
+      .chip { font-size: .62rem; }
+    }
+
+    @media (hover: none) {
+      .cursor-dot, .cursor-ring { display: none; }
+    }
+
+    /* ---------- Reduced motion ---------- */
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+      *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+      }
+      .reveal { opacity: 1; transform: none; }
+      .word > i { transform: none; opacity: 1; }
+      .cursor-dot, .cursor-ring { display: none; }
+      .marquee-track { transform: none !important; }
+      .loader { display: none !important; }
+    }
+
+    @media print {
+      .site-header, .loader, .marquee, #scan-canvas, .cursor-dot, .cursor-ring { display: none !important; }
+      body { background: #fff; color: #000; }
     }
   </style>
 </head>
 <body>
+  <noscript>
+    <style>
+      .loader, .cursor-dot, .cursor-ring { display: none !important; }
+      .reveal { opacity: 1 !important; transform: none !important; }
+      .word > i { opacity: 1 !important; transform: none !important; }
+      .marquee-track { animation: none; }
+    </style>
+  </noscript>
+
   <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
-  <header class="site-header">
-    <nav class="nav container" aria-label="Primary navigation">
-      <a class="brand" href="#top">klahack-portscope</a>
-      <div class="nav-actions">
-        <a class="button" id="repo-link" href="#" data-i18n="source">Source code</a>
-        <button class="language-button" id="language-toggle" type="button" aria-label="Switch language">العربية</button>
+
+  <!-- ===================== LOADER ===================== -->
+  <div class="loader" id="loader" role="status" aria-live="polite">
+    <div class="loader-top">
+      <div class="loader-mark">KLAHACK<span>/</span>PORTSCOPE</div>
+      <div class="loader-log" id="loader-log" aria-hidden="true"></div>
+    </div>
+    <div class="loader-bottom">
+      <div class="mono-label" data-i18n="loaderTag">Booting the scan interface</div>
+      <div class="loader-count"><span id="loader-num">000</span><sup>%</sup></div>
+    </div>
+    <div class="loader-bar"><i id="loader-fill"></i></div>
+  </div>
+
+  <script>
+    /* Failsafe: the loader must never trap the page if the main script fails. */
+    window.setTimeout(function () {
+      var loader = document.getElementById("loader");
+      if (loader && loader.parentNode) loader.parentNode.removeChild(loader);
+      document.body.classList.remove("is-locked");
+    }, 6000);
+  </script>
+
+  <div class="cursor-ring" id="cursor-ring" aria-hidden="true"></div>
+  <div class="cursor-dot" id="cursor-dot" aria-hidden="true"></div>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="site-header" id="site-header">
+    <div class="container header-bar">
+      <a class="brand magnetic" href="#top">
+        <span class="brand-mark" aria-hidden="true">K</span>
+        <span>klahack-portscope</span>
+        <span class="brand-dot" aria-hidden="true"></span>
+      </a>
+
+      <nav class="nav-links" id="nav-links" aria-label="Primary">
+        <a class="nav-link" href="#features" data-i18n="navFeatures">Features</a>
+        <a class="nav-link" href="#demo" data-i18n="navDemo">Demo</a>
+        <a class="nav-link" href="#install" data-i18n="navInstall">Install</a>
+        <a class="nav-link" href="#usage" data-i18n="navUsage">Usage</a>
+        <a class="nav-link" href="#reference" data-i18n="navReference">Reference</a>
+        <a class="nav-link" href="#legal" data-i18n="navLegal">Legal</a>
+      </nav>
+
+      <div class="header-actions">
+        <a class="btn btn--sm magnetic" id="repo-link" href="#" rel="noopener" data-i18n="source">Source</a>
+        <button class="lang-toggle magnetic" id="lang-toggle" type="button" lang="ar">العربية</button>
+        <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links">
+          <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span data-i18n="menu">Menu</span>
+        </button>
       </div>
-    </nav>
+    </div>
+    <div class="progress-rail" aria-hidden="true"><i id="progress-fill"></i></div>
   </header>
 
   <main id="main">
-    <div class="container hero" id="top">
-      <div>
-        <p class="eyebrow" data-i18n="eyebrow">Defensive network auditing</p>
-        <h1>klahack-<wbr>portscope</h1>
-        <p class="tagline" data-i18n="tagline">A fast, transparent TCP connect scanner by klahack—one Python file, zero runtime dependencies, and responsible safeguards built in.</p>
-        <div class="hero-actions">
-          <a class="button primary" href="#install" data-i18n="installNow">Install now</a>
-          <a class="button" href="#usage" data-i18n="viewUsage">View usage</a>
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" id="top">
+      <canvas id="scan-canvas" aria-hidden="true"></canvas>
+      <div class="hero-veil" aria-hidden="true"></div>
+      <div class="container hero-inner">
+        <p class="eyebrow reveal" data-i18n="heroEyebrow">Defensive network auditing · v1.0.0</p>
+        <h1 class="display" data-parallax="0.12">
+          <span class="line split" data-i18n="heroTitleA">Scan what you own.</span>
+          <span class="line split accent italic-serif" data-i18n="heroTitleB">Prove what is open.</span>
+        </h1>
+        <div class="hero-lead-row">
+          <div>
+            <p class="lede reveal" style="--delay:.1s" data-i18n="heroLead">klahack-portscope is a transparent TCP connect scanner by klahack. One auditable Python file, zero runtime dependencies, and responsible-use safeguards compiled into the workflow — not bolted on afterwards.</p>
+            <div class="hero-cta reveal" style="--delay:.2s">
+              <a class="btn btn--solid magnetic" href="#install"><span data-i18n="heroCtaInstall">Install now</span><span class="arrow" aria-hidden="true">→</span></a>
+              <a class="btn magnetic" href="#demo"><span data-i18n="heroCtaDemo">Watch the scan</span><span class="arrow" aria-hidden="true">↓</span></a>
+            </div>
+          </div>
+          <div class="reveal" style="--delay:.3s">
+            <div class="hero-meta">
+              <span class="chip"><b>v1.0.0</b> <span data-i18n="chipRelease">release</span></span>
+              <span class="chip"><b>0</b> <span data-i18n="chipDeps">runtime deps</span></span>
+              <span class="chip"><b>Python 3.8+</b></span>
+              <span class="chip"><b>MIT</b> <span data-i18n="chipLicense">license</span></span>
+              <span class="chip"><b>IPv4 / IPv6</b></span>
+            </div>
+            <p class="scroll-hint" aria-hidden="true"><i></i><span data-i18n="scrollHint">Scroll to scan</span></p>
+          </div>
         </div>
       </div>
-      <div class="terminal" role="img" aria-label="Animated terminal demonstration">
-        <div class="terminal-bar" aria-hidden="true"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-        <pre id="terminal-output" aria-live="off"></pre>
-      </div>
+    </section>
+
+    <!-- ===================== MARQUEE ===================== -->
+    <div class="marquee" data-marquee data-speed="0.55" aria-hidden="true">
+      <div class="marquee-track" data-marquee-track></div>
     </div>
 
-    <section id="features">
+    <!-- ===================== STATS ===================== -->
+    <section class="panel panel--dark" aria-labelledby="stats-title">
       <div class="container">
-        <div class="section-heading">
-          <h2 data-i18n="featuresTitle">Portable by design. Defensive by default.</h2>
-          <p data-i18n="featuresIntro">The same auditable Python code runs across Linux, Termux, macOS, and Windows without a runtime package install.</p>
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="statsEyebrow">By the numbers</p>
+          <h2 class="display" id="stats-title"><span class="split" data-i18n="statsTitle">Small surface. Strict limits.</span></h2>
         </div>
-        <div class="grid">
-          <article class="card"><div class="icon" aria-hidden="true">01</div><h3 data-i18n="featureOneTitle">Zero dependencies</h3><p data-i18n="featureOneText">Built only with the Python standard library and distributed as a single runnable file.</p></article>
-          <article class="card"><div class="icon" aria-hidden="true">02</div><h3 data-i18n="featureTwoTitle">Cross-platform</h3><p data-i18n="featureTwoText">Explicit handling for IPv4, IPv6, Windows socket codes, terminals, and portable installers.</p></article>
-          <article class="card"><div class="icon" aria-hidden="true">03</div><h3 data-i18n="featureThreeTitle">Safe limits</h3><p data-i18n="featureThreeText">Bounded CIDR expansion, authorization gates, timeouts, throttling, and graceful interruption.</p></article>
-          <article class="card"><div class="icon" aria-hidden="true">04</div><h3 data-i18n="featureFourTitle">Useful output</h3><p data-i18n="featureFourText">Readable tables plus stable JSON and CSV for defensive automation and evidence collection.</p></article>
-          <article class="card"><div class="icon" aria-hidden="true">05</div><h3 data-i18n="featureFiveTitle">Banner protection</h3><p data-i18n="featureFiveText">Service banners are size-limited and sanitized before they can reach your terminal.</p></article>
-          <article class="card"><div class="icon" aria-hidden="true">06</div><h3 data-i18n="featureSixTitle">No stealth features</h3><p data-i18n="featureSixText">TCP connect scanning only—no spoofing, raw packets, exploitation, or evasion behavior.</p></article>
+        <div class="stats-grid reveal">
+          <div class="stat"><span class="stat-num" data-count="1">1</span><span class="stat-label" data-i18n="statFile">Python file to audit, standard library only</span></div>
+          <div class="stat"><span class="stat-num" data-count="0">0</span><span class="stat-label" data-i18n="statDeps">Runtime dependencies, no pip install</span></div>
+          <div class="stat"><span class="stat-num" data-count="100">100</span><span class="stat-label" data-i18n="statPorts">Ports in the built-in prevalence list</span></div>
+          <div class="stat"><span class="stat-num" data-count="1000">1000</span><span class="stat-label" data-i18n="statThreads">Maximum worker threads, default 100</span></div>
         </div>
       </div>
     </section>
 
-    <section id="install">
+    <!-- ===================== FEATURES ===================== -->
+    <section class="panel panel--cream" id="features" aria-labelledby="features-title">
       <div class="container">
-        <div class="section-heading">
-          <h2 data-i18n="installTitle">Installation</h2>
-          <p data-i18n="installIntro">Choose your platform. The installer verifies Python and the downloaded scanner's SHA256 checksum before writing any executable.</p>
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="featuresEyebrow">Capabilities</p>
+          <h2 class="display" id="features-title">
+            <span class="split" data-i18n="featuresTitleA">Portable by design.</span>
+            <span class="split italic-serif" data-i18n="featuresTitleB">Defensive by default.</span>
+          </h2>
+          <p class="lede" data-i18n="featuresIntro">The same auditable Python code runs on Linux, Termux, macOS, Windows Terminal, and PowerShell without installing a single runtime package.</p>
         </div>
-        <div class="install-shell">
-          <div class="tabs" role="tablist" aria-label="Installation platforms">
-            <button class="tab" id="tab-linux" role="tab" aria-selected="true" aria-controls="panel-linux" data-panel="linux">Linux</button>
-            <button class="tab" id="tab-termux" role="tab" aria-selected="false" aria-controls="panel-termux" data-panel="termux" tabindex="-1">Termux</button>
-            <button class="tab" id="tab-macos" role="tab" aria-selected="false" aria-controls="panel-macos" data-panel="macos" tabindex="-1">macOS</button>
-            <button class="tab" id="tab-windows" role="tab" aria-selected="false" aria-controls="panel-windows" data-panel="windows" tabindex="-1">Windows</button>
+        <div class="feature-grid">
+          <article class="feature reveal" tabindex="0"><span class="feature-num">01</span><h3 data-i18n="f1t">Zero dependencies</h3><p data-i18n="f1d">Built only with the Python standard library and shipped as one runnable, readable file you can review end to end.</p></article>
+          <article class="feature reveal" style="--delay:.06s" tabindex="0"><span class="feature-num">02</span><h3 data-i18n="f2t">Cross-platform</h3><p data-i18n="f2d">Explicit handling for IPv4, IPv6, POSIX and Windows socket codes, terminal capabilities, and portable installers.</p></article>
+          <article class="feature reveal" style="--delay:.12s" tabindex="0"><span class="feature-num">03</span><h3 data-i18n="f3t">Safe limits</h3><p data-i18n="f3d">Bounded CIDR expansion, an authorization gate, per-socket timeouts, throttling, and graceful Ctrl+C interruption.</p></article>
+          <article class="feature reveal" style="--delay:.18s" tabindex="0"><span class="feature-num">04</span><h3 data-i18n="f4t">Useful output</h3><p data-i18n="f4d">Readable tables plus stable JSON and CSV for defensive automation, evidence collection, and diffing over time.</p></article>
+          <article class="feature reveal" style="--delay:.24s" tabindex="0"><span class="feature-num">05</span><h3 data-i18n="f5t">Banner protection</h3><p data-i18n="f5d">Service banners are capped at 256 bytes and stripped of ANSI and control sequences before they reach your terminal.</p></article>
+          <article class="feature reveal" style="--delay:.3s" tabindex="0"><span class="feature-num">06</span><h3 data-i18n="f6t">No stealth features</h3><p data-i18n="f6d">TCP connect scanning only — no spoofing, raw packets, evasion, or exploitation behaviour, intentionally and permanently.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TERMINAL DEMO ===================== -->
+    <section class="panel panel--dark" id="demo" aria-labelledby="demo-title">
+      <div class="container">
+        <div class="terminal-layout">
+          <div class="reveal">
+            <p class="eyebrow" data-i18n="demoEyebrow">Live output</p>
+            <h2 class="display" id="demo-title"><span class="split" data-i18n="demoTitle">Three formats. One scan.</span></h2>
+            <p class="lede" style="margin-block-start:1.3rem" data-i18n="demoIntro">Result data goes to stdout; branding, warnings, and progress go to stderr, so piping stays clean.</p>
+            <div class="terminal-notes">
+              <div class="note-row"><span>01</span><p data-i18n="demoNote1">Open and filtered rows are shown by default; closed ports are still counted in the summary. Use --verbose for every state or --open-only to narrow it.</p></div>
+              <div class="note-row"><span>02</span><p data-i18n="demoNote2">The responsible-use warning is always printed to stderr, including in --quiet mode.</p></div>
+              <div class="note-row"><span>03</span><p data-i18n="demoNote3">JSON and CSV schemas are stable, so defensive pipelines can diff scans safely.</p></div>
+            </div>
+            <button class="btn btn--sm magnetic" id="replay" type="button" style="margin-block-start:1.6rem"><span data-i18n="replay">Replay animation</span><span class="arrow" aria-hidden="true">↻</span></button>
           </div>
-          <div class="panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux">
-            <h3 data-i18n="linuxTitle">Linux shell</h3><p data-i18n="unixHint">Run in a terminal. Inspecting the script first is the safest approach described below.</p>
-            <div class="command-wrap"><pre class="command"><code data-command="unix"></code></pre><button class="copy-button" type="button" data-copy="unix" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div>
-          </div>
-          <div class="panel" id="panel-termux" role="tabpanel" aria-labelledby="tab-termux" hidden>
-            <h3 data-i18n="termuxTitle">Termux on Android</h3><p data-i18n="unixHint">Run in a terminal. Inspecting the script first is the safest approach described below.</p>
-            <div class="command-wrap"><pre class="command"><code data-command="unix"></code></pre><button class="copy-button" type="button" data-copy="unix" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div>
-          </div>
-          <div class="panel" id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden>
-            <h3 data-i18n="macTitle">macOS Terminal</h3><p data-i18n="unixHint">Run in a terminal. Inspecting the script first is the safest approach described below.</p>
-            <div class="command-wrap"><pre class="command"><code data-command="unix"></code></pre><button class="copy-button" type="button" data-copy="unix" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div>
-          </div>
-          <div class="panel" id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden>
-            <h3 data-i18n="windowsTitle">Windows PowerShell</h3><p data-i18n="windowsHint">Run without Administrator privileges. Open a new terminal after installation.</p>
-            <div class="command-wrap"><pre class="command"><code data-command="windows"></code></pre><button class="copy-button" type="button" data-copy="windows" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div>
+
+          <div class="reveal" style="--delay:.12s">
+            <div class="switch-row" role="tablist" aria-label="Output format">
+              <button class="switch" role="tab" id="fmt-table" aria-selected="true" aria-controls="terminal-body" data-format="table" data-i18n="fmtTable">Table</button>
+              <button class="switch" role="tab" id="fmt-json" aria-selected="false" aria-controls="terminal-body" data-format="json" tabindex="-1">JSON</button>
+              <button class="switch" role="tab" id="fmt-csv" aria-selected="false" aria-controls="terminal-body" data-format="csv" tabindex="-1">CSV</button>
+            </div>
+            <div class="terminal-shell">
+              <div class="terminal-bar" aria-hidden="true">
+                <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+                <span class="terminal-title">klahack-portscope — authorized loopback audit</span>
+              </div>
+              <pre class="terminal-body" id="terminal-body" tabindex="0" role="tabpanel" aria-labelledby="fmt-table">$ klahack-portscope -t 127.0.0.1 -p 22,80,443,8080 --banner
+! Scan only networks you own or are explicitly authorized to test.
+Target: 127.0.0.1 (127.0.0.1)
+PORT   STATE      SERVICE          BANNER
+-----  ---------  ---------------  ------
+22     open       ssh              SSH-2.0-OpenSSH
+80     open       http             nginx
+443    filtered   https
+8080   closed     http-alt
+Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="safest">
-      <div class="container safe">
-        <div><p class="eyebrow" data-i18n="trustEyebrow">Verify before execution</p><h2 data-i18n="safeTitle">Safest method: download → inspect → verify SHA256 → run</h2><p data-i18n="safeIntro">Piping is convenient, but a security tool deserves a deliberate installation path.</p></div>
-        <ol class="steps">
-          <li><strong data-i18n="stepOneTitle">Download</strong><br><span data-i18n="stepOneText">Fetch the installer and SHA256SUMS directly from the repository.</span></li>
-          <li><strong data-i18n="stepTwoTitle">Inspect</strong><br><span data-i18n="stepTwoText">Read the installer and understand every command it will execute.</span></li>
-          <li><strong data-i18n="stepThreeTitle">Verify</strong><br><span data-i18n="stepThreeText">Compare the SHA256 digest before trusting the downloaded scanner.</span></li>
-          <li><strong data-i18n="stepFourTitle">Run</strong><br><span data-i18n="stepFourText">Execute only after the source and checksum meet your expectations.</span></li>
+    <!-- ===================== INSTALL ===================== -->
+    <section class="panel panel--cream" id="install" aria-labelledby="install-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="installEyebrow">Installation</p>
+          <h2 class="display" id="install-title">
+            <span class="split" data-i18n="installTitleA">One command.</span>
+            <span class="split italic-serif" data-i18n="installTitleB">Verified before it runs.</span>
+          </h2>
+          <p class="lede" data-i18n="installIntro">The installers are idempotent, check for Python, verify the downloaded scanner against SHA256SUMS, and install the command name klahack-portscope.</p>
+        </div>
+
+        <div class="install-layout">
+          <div class="os-tabs reveal" role="tablist" aria-label="Installation platform">
+            <button class="os-tab" role="tab" id="tab-linux" aria-selected="true" aria-controls="panel-linux" data-os="linux"><span>Linux</span><span class="os-meta">/usr/local/bin</span></button>
+            <button class="os-tab" role="tab" id="tab-termux" aria-selected="false" aria-controls="panel-termux" data-os="termux" tabindex="-1"><span>Termux</span><span class="os-meta">$PREFIX/bin</span></button>
+            <button class="os-tab" role="tab" id="tab-macos" aria-selected="false" aria-controls="panel-macos" data-os="macos" tabindex="-1"><span>macOS</span><span class="os-meta">~/.local/bin</span></button>
+            <button class="os-tab" role="tab" id="tab-windows" aria-selected="false" aria-controls="panel-windows" data-os="windows" tabindex="-1"><span>Windows</span><span class="os-meta">%LOCALAPPDATA%</span></button>
+          </div>
+
+          <div class="reveal" style="--delay:.1s">
+            <div class="os-panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux">
+              <h3 data-i18n="linuxTitle">Linux shell</h3>
+              <p data-i18n="unixHint">Run it in a terminal. The installer uses /usr/local/bin where available, or ~/.local/bin when sudo is unavailable.</p>
+              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
+              <div class="copy-status" role="status" aria-live="polite"></div>
+            </div>
+            <div class="os-panel" id="panel-termux" role="tabpanel" aria-labelledby="tab-termux" hidden>
+              <h3 data-i18n="termuxTitle">Termux on Android</h3>
+              <p data-i18n="termuxHint">Termux is detected automatically and the command is installed under $PREFIX/bin. No root is required.</p>
+              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
+              <div class="copy-status" role="status" aria-live="polite"></div>
+            </div>
+            <div class="os-panel" id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden>
+              <h3 data-i18n="macTitle">macOS Terminal</h3>
+              <p data-i18n="macHint">Same POSIX installer. If sudo is unavailable it falls back to ~/.local/bin, so add that directory to your PATH.</p>
+              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
+              <div class="copy-status" role="status" aria-live="polite"></div>
+            </div>
+            <div class="os-panel" id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden>
+              <h3 data-i18n="windowsTitle">Windows PowerShell</h3>
+              <p data-i18n="windowsHint">Per-user installation under %LOCALAPPDATA%\klahack-portscope. No Administrator privileges are needed; open a new terminal afterwards.</p>
+              <div class="code-wrap"><pre><code data-command="windows">irm https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.ps1 | iex</code></pre><button class="copy-btn" type="button" data-copy="windows" data-i18n="copy">Copy</button></div>
+              <div class="copy-status" role="status" aria-live="polite"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SAFEST METHOD ===================== -->
+    <section class="panel panel--dark" id="verify" aria-labelledby="verify-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="verifyEyebrow">Verify before execution</p>
+          <h2 class="display" id="verify-title"><span class="split" data-i18n="verifyTitle">Download → inspect → verify → run</span></h2>
+          <p class="lede" data-i18n="verifyIntro">Piping is convenient, but a security tool deserves a deliberate installation path. This is the safest workflow.</p>
+        </div>
+        <ol class="steps reveal">
+          <li class="step"><span class="step-num">01</span><div><h3 data-i18n="s1t">Download</h3><p data-i18n="s1d">Fetch install.sh or install.ps1 together with SHA256SUMS directly from the repository.</p></div></li>
+          <li class="step"><span class="step-num">02</span><div><h3 data-i18n="s2t">Inspect</h3><p data-i18n="s2d">Read the whole installer and understand every command it will execute on your machine.</p></div></li>
+          <li class="step"><span class="step-num">03</span><div><h3 data-i18n="s3t">Verify</h3><p data-i18n="s3d">Download klahack_portscope.py and compare its SHA256 digest against SHA256SUMS before trusting it.</p></div></li>
+          <li class="step"><span class="step-num">04</span><div><h3 data-i18n="s4t">Run</h3><p data-i18n="s4d">Execute the inspected installer only after the source and the checksum both meet your expectations.</p></div></li>
         </ol>
-      </div>
-    </section>
 
-    <section id="usage">
-      <div class="container">
-        <div class="section-heading"><h2 data-i18n="usageTitle">Usage examples</h2><p data-i18n="usageIntro">Start with a narrow scope. These examples use loopback or private addresses only.</p></div>
-        <div class="examples">
-          <div><p class="example-label" data-i18n="exampleOne">Scan common web and administration ports on loopback</p><div class="command-wrap"><pre class="command"><code>klahack-portscope -t 127.0.0.1 -p 22,80,443,8000-8010</code></pre><button class="copy-button" type="button" data-copy-text="klahack-portscope -t 127.0.0.1 -p 22,80,443,8000-8010" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div></div>
-          <div><p class="example-label" data-i18n="exampleTwo">Return the top 20 ports as JSON</p><div class="command-wrap"><pre class="command"><code>klahack-portscope -t localhost --top-ports 20 --json</code></pre><button class="copy-button" type="button" data-copy-text="klahack-portscope -t localhost --top-ports 20 --json" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div></div>
-          <div><p class="example-label" data-i18n="exampleThree">Throttle a private-network audit and save CSV</p><div class="command-wrap"><pre class="command"><code>klahack-portscope -t 192.168.1.0/24 -p 22,80,443 --delay 0.05 --csv --output audit.csv</code></pre><button class="copy-button" type="button" data-copy-text="klahack-portscope -t 192.168.1.0/24 -p 22,80,443 --delay 0.05 --csv --output audit.csv" data-i18n="copy">Copy</button></div><div class="copy-status" aria-live="polite"></div></div>
+        <div class="split-2" style="margin-block-start:clamp(2rem,4vw,3rem)">
+          <div class="reveal">
+            <h3 data-i18n="directTitle">Run straight from source</h3>
+            <p class="lede" style="font-size:1rem" data-i18n="directIntro">No installation required — the single file is executable as-is.</p>
+            <div class="code-wrap"><pre><code>python3 klahack_portscope.py --version</code></pre><button class="copy-btn" type="button" data-copy-text="python3 klahack_portscope.py --version" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
+          <div class="reveal" style="--delay:.1s">
+            <h3 data-i18n="uninstallTitle">Verify a checksum manually</h3>
+            <p class="lede" style="font-size:1rem" data-i18n="uninstallIntro">Compare the digest yourself before running anything.</p>
+            <div class="code-wrap"><pre><code>sha256sum -c SHA256SUMS</code></pre><button class="copy-btn" type="button" data-copy-text="sha256sum -c SHA256SUMS" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
         </div>
       </div>
     </section>
 
-    <section aria-labelledby="legal-title">
-      <div class="container warning" role="note">
-        <h2 id="legal-title"><span aria-hidden="true">⚠</span><span data-i18n="legalTitle">Authorization is mandatory</span></h2>
-        <p data-i18n="legalText">Scan only networks you own or have explicit written permission to test. Public targets require interactive confirmation or --i-have-permission for non-interactive use. You are responsible for complying with applicable laws and policies.</p>
+    <!-- ===================== USAGE ===================== -->
+    <section class="panel panel--cream" id="usage" aria-labelledby="usage-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="usageEyebrow">Usage</p>
+          <h2 class="display" id="usage-title">
+            <span class="split" data-i18n="usageTitleA">Start narrow.</span>
+            <span class="split italic-serif" data-i18n="usageTitleB">Widen only with permission.</span>
+          </h2>
+          <p class="lede" data-i18n="usageIntro">Every invocation prints a compact brand banner to stderr unless --quiet is supplied. These examples use loopback or private addresses only.</p>
+        </div>
+
+        <div class="code-wrap reveal" style="margin-block-end:clamp(1.4rem,3vw,2.2rem)"><pre><code>klahack-portscope -t TARGET (-p PORTS | --top-ports N) [options]</code></pre><button class="copy-btn" type="button" data-copy-text="klahack-portscope -t TARGET (-p PORTS | --top-ports N) [options]" data-i18n="copy">Copy</button></div>
+
+        <div class="examples">
+          <div class="example reveal">
+            <p class="example-label"><span class="example-tag">01</span><span data-i18n="ex1">Scan selected loopback ports, including a small range</span></p>
+            <div class="code-wrap"><pre><code>klahack-portscope -t 127.0.0.1 -p 22,80,443,8000-8010</code></pre><button class="copy-btn" type="button" data-copy-text="klahack-portscope -t 127.0.0.1 -p 22,80,443,8000-8010" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
+          <div class="example reveal" style="--delay:.06s">
+            <p class="example-label"><span class="example-tag">02</span><span data-i18n="ex2">Scan the 20 most prevalent ports on localhost and emit JSON</span></p>
+            <div class="code-wrap"><pre><code>klahack-portscope -t localhost --top-ports 20 --json</code></pre><button class="copy-btn" type="button" data-copy-text="klahack-portscope -t localhost --top-ports 20 --json" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
+          <div class="example reveal" style="--delay:.12s">
+            <p class="example-label"><span class="example-tag">03</span><span data-i18n="ex3">Throttle an authorized private-network scan and save CSV</span></p>
+            <div class="code-wrap"><pre><code>klahack-portscope -t 192.168.1.0/24 -p 22,80,443 --delay 0.05 --csv --output audit.csv</code></pre><button class="copy-btn" type="button" data-copy-text="klahack-portscope -t 192.168.1.0/24 -p 22,80,443 --delay 0.05 --csv --output audit.csv" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
+          <div class="example reveal" style="--delay:.18s">
+            <p class="example-label"><span class="example-tag">04</span><span data-i18n="ex4">Assert authorization for a public target in non-interactive use</span></p>
+            <div class="code-wrap"><pre><code>klahack-portscope -t 203.0.113.10 -p 443 --i-have-permission</code></pre><button class="copy-btn" type="button" data-copy-text="klahack-portscope -t 203.0.113.10 -p 443 --i-have-permission" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+            <p style="margin:1rem 0 0;font-size:.95rem;color:rgba(8,9,10,.7)" data-i18n="ex4note">The flag is an authorization confirmation, not a substitute for actual written permission.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== REFERENCE ===================== -->
+    <section class="panel panel--dark" id="reference" aria-labelledby="reference-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="refEyebrow">Reference</p>
+          <h2 class="display" id="reference-title"><span class="split" data-i18n="refTitle">Every option, in one table.</span></h2>
+          <p class="lede" data-i18n="refIntro">--ports and --top-ports are mutually exclusive. So are -4/-6, --json/--csv, and --verbose/--open-only.</p>
+        </div>
+
+        <div class="table-wrap reveal">
+          <table>
+            <caption data-i18n="refCaption">Command-line options</caption>
+            <thead><tr><th scope="col" data-i18n="colOption">Option</th><th scope="col" data-i18n="colDescription">Description</th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><code>-t, --target TARGET</code></th><td data-i18n="optTarget">IP, hostname, CIDR, or comma-separated targets.</td></tr>
+              <tr><th scope="row"><code>-p, --ports PORTS</code></th><td data-i18n="optPorts">Mixed ports and ranges such as 22,80,443,8000-8100; deduplicated and sorted.</td></tr>
+              <tr><th scope="row"><code>--top-ports N</code></th><td data-i18n="optTop">Scan the first N ports from the built-in prevalence list (1 to 100).</td></tr>
+              <tr><th scope="row"><code>--timeout SECONDS</code></th><td data-i18n="optTimeout">Per-socket timeout; default 1.0.</td></tr>
+              <tr><th scope="row"><code>--threads N</code></th><td data-i18n="optThreads">Worker count; default 100, maximum 1000.</td></tr>
+              <tr><th scope="row"><code>--delay SECONDS</code></th><td data-i18n="optDelay">Delay between task submissions for throttling; default 0.</td></tr>
+              <tr><th scope="row"><code>-4 / -6</code></th><td data-i18n="optFamily">Force IPv4 or IPv6; otherwise both are resolved with getaddrinfo.</td></tr>
+              <tr><th scope="row"><code>--banner</code></th><td data-i18n="optBanner">Passively read up to 256 bytes; try a basic HTTP HEAD request when appropriate.</td></tr>
+              <tr><th scope="row"><code>--json / --csv</code></th><td data-i18n="optFormat">Select machine-readable output.</td></tr>
+              <tr><th scope="row"><code>--output FILE</code></th><td data-i18n="optOutput">Write the selected output to a file instead of stdout.</td></tr>
+              <tr><th scope="row"><code>--quiet</code></th><td data-i18n="optQuiet">Suppress the ASCII brand banner and progress; the legal warning remains.</td></tr>
+              <tr><th scope="row"><code>--verbose</code></th><td data-i18n="optVerbose">Include open, closed, and filtered result rows.</td></tr>
+              <tr><th scope="row"><code>--open-only</code></th><td data-i18n="optOpenOnly">Include only open result rows.</td></tr>
+              <tr><th scope="row"><code>--no-color</code></th><td data-i18n="optNoColor">Disable ANSI result colors.</td></tr>
+              <tr><th scope="row"><code>--no-progress</code></th><td data-i18n="optNoProgress">Disable progress output.</td></tr>
+              <tr><th scope="row"><code>--max-hosts N</code></th><td data-i18n="optMaxHosts">Limit expanded or resolved hosts; default 256.</td></tr>
+              <tr><th scope="row"><code>--i-have-permission</code></th><td data-i18n="optPermission">Confirm authorization for public targets in non-interactive use.</td></tr>
+              <tr><th scope="row"><code>--version</code></th><td data-i18n="optVersion">Print klahack-portscope 1.0.0 by klahack.</td></tr>
+              <tr><th scope="row"><code>-h, --help</code></th><td data-i18n="optHelp">Show command help.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="split-2" style="margin-block-start:clamp(2.4rem,5vw,4rem)">
+          <div class="reveal">
+            <h3 style="font-family:var(--display);font-size:clamp(1.3rem,2.6vw,2rem);text-transform:uppercase" data-i18n="exitTitle">Exit codes</h3>
+            <div class="table-wrap" style="margin-block-start:1.2rem">
+              <table>
+                <thead><tr><th scope="col" data-i18n="colCode">Code</th><th scope="col" data-i18n="colMeaning">Meaning</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row" class="num-cell">0</th><td data-i18n="exit0">Scan completed successfully.</td></tr>
+                  <tr><th scope="row" class="num-cell">1</th><td data-i18n="exit1">Runtime, filesystem, or unexpected socket error.</td></tr>
+                  <tr><th scope="row" class="num-cell">2</th><td data-i18n="exit2">Invalid input or authorization not confirmed.</td></tr>
+                  <tr><th scope="row" class="num-cell">130</th><td data-i18n="exit130">Interrupted with Ctrl+C; completed partial results are emitted when available.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="reveal" style="--delay:.1s">
+            <h3 style="font-family:var(--display);font-size:clamp(1.3rem,2.6vw,2rem);text-transform:uppercase" data-i18n="schemaTitle">JSON and CSV shape</h3>
+            <p class="lede" style="font-size:1rem;margin-block:1rem" data-i18n="schemaIntro">JSON always contains tool identity, timestamps, duration, grouped targets, and a summary.</p>
+            <div class="code-wrap"><pre><code>{
+  "tool": "klahack-portscope",
+  "author": "klahack",
+  "version": "1.0.0",
+  "started_at": "2026-01-01T12:00:00.000Z",
+  "finished_at": "2026-01-01T12:00:01.008Z",
+  "duration_s": 1.008,
+  "targets": [ { "host": "127.0.0.1", "ip": "127.0.0.1",
+    "results": [ { "port": 22, "state": "open",
+      "service": "ssh", "banner": "SSH-2.0-OpenSSH" } ] } ],
+  "summary": { "open": 1, "closed": 1, "filtered": 1 }
+}</code></pre></div>
+            <div class="code-wrap" style="margin-block-start:.8rem"><pre><code>host,ip,port,protocol,state,service,banner</code></pre><button class="copy-btn" type="button" data-copy-text="host,ip,port,protocol,state,service,banner" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== HOW IT WORKS ===================== -->
+    <section class="panel panel--cream" id="how" aria-labelledby="how-title">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow" data-i18n="howEyebrow">How it works</p>
+          <h2 class="display" id="how-title">
+            <span class="split" data-i18n="howTitleA">A normal connect scan.</span>
+            <span class="split italic-serif" data-i18n="howTitleB">Nothing hidden.</span>
+          </h2>
+          <p class="lede" data-i18n="howIntro">The scanner performs a full TCP connect scan through the operating system's normal socket API. It never crafts raw packets.</p>
+        </div>
+
+        <div class="state-grid" style="margin-block-end:clamp(2rem,4vw,3rem)">
+          <article class="state-card reveal" style="--tone:var(--acid-deep)"><h3>open</h3><p data-i18n="stateOpen">The TCP connection succeeded, so a service accepted the handshake on that port.</p></article>
+          <article class="state-card reveal" style="--delay:.06s;--tone:#8a6a12"><h3>closed</h3><p data-i18n="stateClosed">The connection was refused (ECONNREFUSED, or Windows WSAECONNREFUSED 10061), so the host responded.</p></article>
+          <article class="state-card reveal" style="--delay:.12s;--tone:#b1452f"><h3>filtered</h3><p data-i18n="stateFiltered">The attempt timed out, had no route, or failed in a way that cannot prove the port is closed.</p></article>
+        </div>
+
+        <div class="split-2">
+          <div class="reveal">
+            <h3 data-i18n="engineTitle">Bounded execution engine</h3>
+            <ul class="bullet-list">
+              <li data-i18n="engine1">Work is submitted to a ThreadPoolExecutor in bounded batches instead of materializing every host and port pair.</li>
+              <li data-i18n="engine2">Every socket is context-managed, so descriptors are released deterministically.</li>
+              <li data-i18n="engine3">Ctrl+C stops new work, waits for the small in-flight batch, emits completed partial results, and returns exit code 130.</li>
+              <li data-i18n="engine4">Banners are read passively first; a basic HEAD request is only sent on common HTTP ports when nothing arrives.</li>
+            </ul>
+          </div>
+          <div class="reveal" style="--delay:.1s">
+            <h3 data-i18n="gateTitle">Authorization safeguard</h3>
+            <ul class="bullet-list">
+              <li data-i18n="gate1">Resolved addresses are classified with Python's ipaddress module before any socket is opened.</li>
+              <li data-i18n="gate2">Private, loopback, and link-local targets proceed without an extra prompt.</li>
+              <li data-i18n="gate3">Any other address requires an interactive yes, or --i-have-permission in non-interactive runs.</li>
+              <li data-i18n="gate4">Otherwise the command refuses to scan and returns exit code 2; --max-hosts also caps oversized ranges.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="split-2" style="margin-block-start:clamp(2rem,4vw,3rem)">
+          <div class="reveal">
+            <h3 data-i18n="limitsTitle">Honest limitations</h3>
+            <ul class="bullet-list">
+              <li data-i18n="limit1">TCP only; there is no UDP scanner.</li>
+              <li data-i18n="limit2">Connect scans complete the operating system TCP handshake; there is no SYN or raw-packet scan.</li>
+              <li data-i18n="limit3">Service names are port-based hints and banners are untrusted hints, not definitive identification.</li>
+              <li data-i18n="limit4">Firewalls can make closed or unreachable ports appear filtered.</li>
+              <li data-i18n="limit5">DNS answers and local service databases can differ by operating system.</li>
+              <li data-i18n="limit6">This focused audit utility is not a replacement for nmap or a complete vulnerability assessment.</li>
+            </ul>
+          </div>
+          <div class="reveal" style="--delay:.1s">
+            <h3 data-i18n="devTitle">Development and tests</h3>
+            <ul class="bullet-list">
+              <li data-i18n="dev1">The test suite uses unittest and binds only to 127.0.0.1; it never scans an external network.</li>
+              <li data-i18n="dev2">CI runs Python 3.8 and 3.12 on Ubuntu, macOS, and Windows.</li>
+              <li data-i18n="dev3">Tagged releases also build standalone PyInstaller executables; PyInstaller is a build-time dependency only.</li>
+            </ul>
+            <div class="code-wrap" style="margin-block-start:1.2rem"><pre><code>python -m unittest discover -s tests</code></pre><button class="copy-btn" type="button" data-copy-text="python -m unittest discover -s tests" data-i18n="copy">Copy</button></div>
+            <div class="copy-status" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== MARQUEE 2 ===================== -->
+    <div class="marquee marquee--dark" data-marquee data-speed="-0.4" aria-hidden="true">
+      <div class="marquee-track" data-marquee-track></div>
+    </div>
+
+    <!-- ===================== LEGAL ===================== -->
+    <section class="panel panel--acid" id="legal" aria-labelledby="legal-title">
+      <div class="container legal-inner">
+        <div class="reveal">
+          <p class="eyebrow" data-i18n="legalEyebrow">Legal warning</p>
+          <h2 class="display legal-title" id="legal-title">
+            <span class="legal-sign" aria-hidden="true">⚠</span>
+            <span class="split" data-i18n="legalTitle">Authorization is mandatory.</span>
+          </h2>
+        </div>
+        <p class="lede reveal" style="--delay:.08s;max-width:70ch;font-size:clamp(1.1rem,1rem+.6vw,1.5rem)" data-i18n="legalText">Scan only networks you own or have explicit written permission to test. You are responsible for complying with applicable law, contracts, and organizational policy. The tool intentionally provides no stealth, spoofing, raw-packet, evasion, or exploitation features.</p>
+        <div class="legal-points reveal" style="--delay:.14s">
+          <div class="legal-point"><h3 data-i18n="lp1t">Ownership or written consent</h3><p data-i18n="lp1d">Targets must be systems you own or are explicitly authorized in writing to test.</p></div>
+          <div class="legal-point"><h3 data-i18n="lp2t">Public targets are gated</h3><p data-i18n="lp2d">Public addresses require an interactive confirmation, or --i-have-permission for non-interactive use.</p></div>
+          <div class="legal-point"><h3 data-i18n="lp3t">Your responsibility</h3><p data-i18n="lp3d">Compliance with laws, contracts, and organizational policy stays with the operator, always.</p></div>
+        </div>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container footer-inner">
-      <span>© 2026 klahack - MIT License</span>
-      <a id="footer-repo-link" href="#" data-i18n="source">Source code</a>
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-mark reveal" aria-hidden="true">KLAHACK-PORTSCOPE</div>
+      <div class="footer-grid">
+        <div>
+          <h4 data-i18n="footProject">Project</h4>
+          <ul>
+            <li><a id="footer-repo" href="#" data-i18n="footRepo">GitHub repository</a></li>
+            <li><a id="footer-readme" href="#" data-i18n="footReadme">README</a></li>
+            <li><a id="footer-changelog" href="#" data-i18n="footChangelog">Changelog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footDocs">On this page</h4>
+          <ul>
+            <li><a href="#install" data-i18n="navInstall">Install</a></li>
+            <li><a href="#usage" data-i18n="navUsage">Usage</a></li>
+            <li><a href="#reference" data-i18n="navReference">Reference</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footSafety">Safety</h4>
+          <ul>
+            <li><a id="footer-security" href="#" data-i18n="footSecurity">Security policy</a></li>
+            <li><a href="#verify" data-i18n="footVerify">Verify checksums</a></li>
+            <li><a href="#legal" data-i18n="footLegal">Legal warning</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footBuild">Build</h4>
+          <ul>
+            <li><span data-i18n="footBuild1">Python 3.8+ · standard library</span></li>
+            <li><span data-i18n="footBuild2">Linux · Termux · macOS · Windows</span></li>
+            <li><a id="footer-license" href="#" data-i18n="footLicense">MIT License</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 klahack — MIT License</span>
+        <span data-i18n="footNote">Authorized testing only. No stealth features.</span>
+        <a href="#top" data-i18n="footTop">Back to top ↑</a>
+      </div>
     </div>
   </footer>
 
   <script>
-    const CONFIG = Object.freeze({
-      user: "klahack",
-      repo: "klahack-portscope",
-      branch: "main"
+  (function () {
+    "use strict";
+
+    /* =========================================================
+       0 · Environment
+       ========================================================= */
+    var mq = typeof window.matchMedia === "function"
+      ? function (query) { return window.matchMedia(query); }
+      : function () { return { matches: false, addEventListener: function () {}, removeEventListener: function () {} }; };
+    var motionQuery = mq("(prefers-reduced-motion: reduce)");
+    var coarseQuery = mq("(hover: none), (pointer: coarse)");
+    var reduced = motionQuery.matches;
+    var coarse = coarseQuery.matches;
+
+    var CONFIG = Object.freeze({ user: "klahack", repo: "klahack-portscope", branch: "main" });
+    var repoUrl = "https://github.com/" + CONFIG.user + "/" + CONFIG.repo;
+    var rawBase = "https://raw.githubusercontent.com/" + CONFIG.user + "/" + CONFIG.repo + "/" + CONFIG.branch;
+    var commands = Object.freeze({
+      unix: "curl -fsSL " + rawBase + "/install.sh | bash",
+      windows: "irm " + rawBase + "/install.ps1 | iex"
     });
 
-    const TEXT = {
+    /* =========================================================
+       1 · Dictionary (English default, Arabic RTL)
+       ========================================================= */
+    var TEXT = {
       en: {
-        skip: "Skip to content", source: "Source code", eyebrow: "Defensive network auditing",
-        tagline: "A fast, transparent TCP connect scanner by klahack—one Python file, zero runtime dependencies, and responsible safeguards built in.",
-        installNow: "Install now", viewUsage: "View usage", featuresTitle: "Portable by design. Defensive by default.",
-        featuresIntro: "The same auditable Python code runs across Linux, Termux, macOS, and Windows without a runtime package install.",
-        featureOneTitle: "Zero dependencies", featureOneText: "Built only with the Python standard library and distributed as a single runnable file.",
-        featureTwoTitle: "Cross-platform", featureTwoText: "Explicit handling for IPv4, IPv6, Windows socket codes, terminals, and portable installers.",
-        featureThreeTitle: "Safe limits", featureThreeText: "Bounded CIDR expansion, authorization gates, timeouts, throttling, and graceful interruption.",
-        featureFourTitle: "Useful output", featureFourText: "Readable tables plus stable JSON and CSV for defensive automation and evidence collection.",
-        featureFiveTitle: "Banner protection", featureFiveText: "Service banners are size-limited and sanitized before they can reach your terminal.",
-        featureSixTitle: "No stealth features", featureSixText: "TCP connect scanning only—no spoofing, raw packets, exploitation, or evasion behavior.",
-        installTitle: "Installation", installIntro: "Choose your platform. The installer verifies Python and the downloaded scanner's SHA256 checksum before writing any executable.",
+        skip: "Skip to content", source: "Source", menu: "Menu", close: "Close",
+        navFeatures: "Features", navDemo: "Demo", navInstall: "Install", navUsage: "Usage", navReference: "Reference", navLegal: "Legal",
+        loaderTag: "Booting the scan interface",
+        heroEyebrow: "Defensive network auditing · v1.0.0",
+        heroTitleA: "Scan what you own.",
+        heroTitleB: "Prove what is open.",
+        heroLead: "klahack-portscope is a transparent TCP connect scanner by klahack. One auditable Python file, zero runtime dependencies, and responsible-use safeguards compiled into the workflow — not bolted on afterwards.",
+        heroCtaInstall: "Install now", heroCtaDemo: "Watch the scan",
+        chipRelease: "release", chipDeps: "runtime deps", chipLicense: "license",
+        scrollHint: "Scroll to scan",
+        marquee: "TCP connect scan ✦ Zero dependencies ✦ IPv4 + IPv6 ✦ JSON / CSV ✦ Authorized targets only ✦ One Python file ✦",
+        marquee2: "Download ✦ Inspect ✦ Verify SHA256 ✦ Run ✦ Scan only what you own ✦ No stealth features ✦",
+        statsEyebrow: "By the numbers", statsTitle: "Small surface. Strict limits.",
+        statFile: "Python file to audit, standard library only",
+        statDeps: "Runtime dependencies, no pip install",
+        statPorts: "Ports in the built-in prevalence list",
+        statThreads: "Maximum worker threads, default 100",
+        featuresEyebrow: "Capabilities",
+        featuresTitleA: "Portable by design.", featuresTitleB: "Defensive by default.",
+        featuresIntro: "The same auditable Python code runs on Linux, Termux, macOS, Windows Terminal, and PowerShell without installing a single runtime package.",
+        f1t: "Zero dependencies", f1d: "Built only with the Python standard library and shipped as one runnable, readable file you can review end to end.",
+        f2t: "Cross-platform", f2d: "Explicit handling for IPv4, IPv6, POSIX and Windows socket codes, terminal capabilities, and portable installers.",
+        f3t: "Safe limits", f3d: "Bounded CIDR expansion, an authorization gate, per-socket timeouts, throttling, and graceful Ctrl+C interruption.",
+        f4t: "Useful output", f4d: "Readable tables plus stable JSON and CSV for defensive automation, evidence collection, and diffing over time.",
+        f5t: "Banner protection", f5d: "Service banners are capped at 256 bytes and stripped of ANSI and control sequences before they reach your terminal.",
+        f6t: "No stealth features", f6d: "TCP connect scanning only — no spoofing, raw packets, evasion, or exploitation behaviour, intentionally and permanently.",
+        demoEyebrow: "Live output", demoTitle: "Three formats. One scan.",
+        demoIntro: "Result data goes to stdout; branding, warnings, and progress go to stderr, so piping stays clean.",
+        demoNote1: "Open and filtered rows are shown by default; closed ports are still counted in the summary. Use --verbose for every state or --open-only to narrow it.",
+        demoNote2: "The responsible-use warning is always printed to stderr, including in --quiet mode.",
+        demoNote3: "JSON and CSV schemas are stable, so defensive pipelines can diff scans safely.",
+        replay: "Replay animation", fmtTable: "Table",
+        installEyebrow: "Installation",
+        installTitleA: "One command.", installTitleB: "Verified before it runs.",
+        installIntro: "The installers are idempotent, check for Python, verify the downloaded scanner against SHA256SUMS, and install the command name klahack-portscope.",
         linuxTitle: "Linux shell", termuxTitle: "Termux on Android", macTitle: "macOS Terminal", windowsTitle: "Windows PowerShell",
-        unixHint: "Run in a terminal. Inspecting the script first is the safest approach described below.",
-        windowsHint: "Run without Administrator privileges. Open a new terminal after installation.", copy: "Copy", copied: "Copied!", copyFailed: "Select and copy the command manually.",
-        trustEyebrow: "Verify before execution", safeTitle: "Safest method: download → inspect → verify SHA256 → run",
-        safeIntro: "Piping is convenient, but a security tool deserves a deliberate installation path.",
-        stepOneTitle: "Download", stepOneText: "Fetch the installer and SHA256SUMS directly from the repository.",
-        stepTwoTitle: "Inspect", stepTwoText: "Read the installer and understand every command it will execute.",
-        stepThreeTitle: "Verify", stepThreeText: "Compare the SHA256 digest before trusting the downloaded scanner.",
-        stepFourTitle: "Run", stepFourText: "Execute only after the source and checksum meet your expectations.",
-        usageTitle: "Usage examples", usageIntro: "Start with a narrow scope. These examples use loopback or private addresses only.",
-        exampleOne: "Scan common web and administration ports on loopback", exampleTwo: "Return the top 20 ports as JSON",
-        exampleThree: "Throttle a private-network audit and save CSV", legalTitle: "Authorization is mandatory",
-        legalText: "Scan only networks you own or have explicit written permission to test. Public targets require interactive confirmation or --i-have-permission for non-interactive use. You are responsible for complying with applicable laws and policies."
+        unixHint: "Run it in a terminal. The installer uses /usr/local/bin where available, or ~/.local/bin when sudo is unavailable.",
+        termuxHint: "Termux is detected automatically and the command is installed under $PREFIX/bin. No root is required.",
+        macHint: "Same POSIX installer. If sudo is unavailable it falls back to ~/.local/bin, so add that directory to your PATH.",
+        windowsHint: "Per-user installation under %LOCALAPPDATA%\\klahack-portscope. No Administrator privileges are needed; open a new terminal afterwards.",
+        copy: "Copy", copied: "Copied", copyFailed: "Select and copy manually",
+        verifyEyebrow: "Verify before execution", verifyTitle: "Download → inspect → verify → run",
+        verifyIntro: "Piping is convenient, but a security tool deserves a deliberate installation path. This is the safest workflow.",
+        s1t: "Download", s1d: "Fetch install.sh or install.ps1 together with SHA256SUMS directly from the repository.",
+        s2t: "Inspect", s2d: "Read the whole installer and understand every command it will execute on your machine.",
+        s3t: "Verify", s3d: "Download klahack_portscope.py and compare its SHA256 digest against SHA256SUMS before trusting it.",
+        s4t: "Run", s4d: "Execute the inspected installer only after the source and the checksum both meet your expectations.",
+        directTitle: "Run straight from source", directIntro: "No installation required — the single file is executable as-is.",
+        uninstallTitle: "Verify a checksum manually", uninstallIntro: "Compare the digest yourself before running anything.",
+        usageEyebrow: "Usage",
+        usageTitleA: "Start narrow.", usageTitleB: "Widen only with permission.",
+        usageIntro: "Every invocation prints a compact brand banner to stderr unless --quiet is supplied. These examples use loopback or private addresses only.",
+        ex1: "Scan selected loopback ports, including a small range",
+        ex2: "Scan the 20 most prevalent ports on localhost and emit JSON",
+        ex3: "Throttle an authorized private-network scan and save CSV",
+        ex4: "Assert authorization for a public target in non-interactive use",
+        ex4note: "The flag is an authorization confirmation, not a substitute for actual written permission.",
+        refEyebrow: "Reference", refTitle: "Every option, in one table.",
+        refIntro: "--ports and --top-ports are mutually exclusive. So are -4/-6, --json/--csv, and --verbose/--open-only.",
+        refCaption: "Command-line options", colOption: "Option", colDescription: "Description",
+        optTarget: "IP, hostname, CIDR, or comma-separated targets.",
+        optPorts: "Mixed ports and ranges such as 22,80,443,8000-8100; deduplicated and sorted.",
+        optTop: "Scan the first N ports from the built-in prevalence list (1 to 100).",
+        optTimeout: "Per-socket timeout; default 1.0.",
+        optThreads: "Worker count; default 100, maximum 1000.",
+        optDelay: "Delay between task submissions for throttling; default 0.",
+        optFamily: "Force IPv4 or IPv6; otherwise both are resolved with getaddrinfo.",
+        optBanner: "Passively read up to 256 bytes; try a basic HTTP HEAD request when appropriate.",
+        optFormat: "Select machine-readable output.",
+        optOutput: "Write the selected output to a file instead of stdout.",
+        optQuiet: "Suppress the ASCII brand banner and progress; the legal warning remains.",
+        optVerbose: "Include open, closed, and filtered result rows.",
+        optOpenOnly: "Include only open result rows.",
+        optNoColor: "Disable ANSI result colors.",
+        optNoProgress: "Disable progress output.",
+        optMaxHosts: "Limit expanded or resolved hosts; default 256.",
+        optPermission: "Confirm authorization for public targets in non-interactive use.",
+        optVersion: "Print klahack-portscope 1.0.0 by klahack.",
+        optHelp: "Show command help.",
+        exitTitle: "Exit codes", colCode: "Code", colMeaning: "Meaning",
+        exit0: "Scan completed successfully.",
+        exit1: "Runtime, filesystem, or unexpected socket error.",
+        exit2: "Invalid input or authorization not confirmed.",
+        exit130: "Interrupted with Ctrl+C; completed partial results are emitted when available.",
+        schemaTitle: "JSON and CSV shape",
+        schemaIntro: "JSON always contains tool identity, timestamps, duration, grouped targets, and a summary.",
+        howEyebrow: "How it works",
+        howTitleA: "A normal connect scan.", howTitleB: "Nothing hidden.",
+        howIntro: "The scanner performs a full TCP connect scan through the operating system's normal socket API. It never crafts raw packets.",
+        stateOpen: "The TCP connection succeeded, so a service accepted the handshake on that port.",
+        stateClosed: "The connection was refused (ECONNREFUSED, or Windows WSAECONNREFUSED 10061), so the host responded.",
+        stateFiltered: "The attempt timed out, had no route, or failed in a way that cannot prove the port is closed.",
+        engineTitle: "Bounded execution engine",
+        engine1: "Work is submitted to a ThreadPoolExecutor in bounded batches instead of materializing every host and port pair.",
+        engine2: "Every socket is context-managed, so descriptors are released deterministically.",
+        engine3: "Ctrl+C stops new work, waits for the small in-flight batch, emits completed partial results, and returns exit code 130.",
+        engine4: "Banners are read passively first; a basic HEAD request is only sent on common HTTP ports when nothing arrives.",
+        gateTitle: "Authorization safeguard",
+        gate1: "Resolved addresses are classified with Python's ipaddress module before any socket is opened.",
+        gate2: "Private, loopback, and link-local targets proceed without an extra prompt.",
+        gate3: "Any other address requires an interactive yes, or --i-have-permission in non-interactive runs.",
+        gate4: "Otherwise the command refuses to scan and returns exit code 2; --max-hosts also caps oversized ranges.",
+        limitsTitle: "Honest limitations",
+        limit1: "TCP only; there is no UDP scanner.",
+        limit2: "Connect scans complete the operating system TCP handshake; there is no SYN or raw-packet scan.",
+        limit3: "Service names are port-based hints and banners are untrusted hints, not definitive identification.",
+        limit4: "Firewalls can make closed or unreachable ports appear filtered.",
+        limit5: "DNS answers and local service databases can differ by operating system.",
+        limit6: "This focused audit utility is not a replacement for nmap or a complete vulnerability assessment.",
+        devTitle: "Development and tests",
+        dev1: "The test suite uses unittest and binds only to 127.0.0.1; it never scans an external network.",
+        dev2: "CI runs Python 3.8 and 3.12 on Ubuntu, macOS, and Windows.",
+        dev3: "Tagged releases also build standalone PyInstaller executables; PyInstaller is a build-time dependency only.",
+        legalEyebrow: "Legal warning", legalTitle: "Authorization is mandatory.",
+        legalText: "Scan only networks you own or have explicit written permission to test. You are responsible for complying with applicable law, contracts, and organizational policy. The tool intentionally provides no stealth, spoofing, raw-packet, evasion, or exploitation features.",
+        lp1t: "Ownership or written consent", lp1d: "Targets must be systems you own or are explicitly authorized in writing to test.",
+        lp2t: "Public targets are gated", lp2d: "Public addresses require an interactive confirmation, or --i-have-permission for non-interactive use.",
+        lp3t: "Your responsibility", lp3d: "Compliance with laws, contracts, and organizational policy stays with the operator, always.",
+        footProject: "Project", footRepo: "GitHub repository", footReadme: "README", footChangelog: "Changelog",
+        footDocs: "On this page", footSafety: "Safety", footSecurity: "Security policy", footVerify: "Verify checksums", footLegal: "Legal warning",
+        footBuild: "Build", footBuild1: "Python 3.8+ · standard library", footBuild2: "Linux · Termux · macOS · Windows", footLicense: "MIT License",
+        footNote: "Authorized testing only. No stealth features.", footTop: "Back to top ↑",
+        langSwitchLabel: "Switch to Arabic"
       },
       ar: {
-        skip: "انتقل إلى المحتوى", source: "الشيفرة المصدرية", eyebrow: "تدقيق دفاعي للشبكات",
-        tagline: "ماسح شفاف وسريع لاتصالات TCP من تطوير klahack — ملف Python واحد، بلا اعتماديات تشغيل، مع ضوابط للاستخدام المسؤول.",
-        installNow: "ثبّت الآن", viewUsage: "عرض الاستخدام", featuresTitle: "محمول في تصميمه، ودفاعي افتراضيًا.",
-        featuresIntro: "تعمل شيفرة Python نفسها والقابلة للتدقيق على Linux وTermux وmacOS وWindows دون تثبيت حزم وقت التشغيل.",
-        featureOneTitle: "بلا اعتماديات", featureOneText: "مبني بالكامل بمكتبة Python القياسية وموزع كملف واحد قابل للتشغيل.",
-        featureTwoTitle: "متعدد المنصات", featureTwoText: "معالجة واضحة لـ IPv4 وIPv6 ورموز مقابس Windows والطرفيات وأدوات التثبيت المحمولة.",
-        featureThreeTitle: "حدود آمنة", featureThreeText: "توسيع CIDR محدود، وبوابة تصريح، ومهل زمنية، وإبطاء اختياري، وإيقاف آمن.",
-        featureFourTitle: "مخرجات مفيدة", featureFourText: "جداول مقروءة ومخططا JSON وCSV ثابتان للأتمتة الدفاعية وجمع الأدلة.",
-        featureFiveTitle: "حماية لافتات الخدمات", featureFiveText: "تُحدّد أحجام لافتات الخدمات وتُنظّف قبل وصولها إلى طرفيتك.",
-        featureSixTitle: "لا مزايا للتخفي", featureSixText: "فحص اتصال TCP فقط — بلا انتحال أو حزم خام أو استغلال أو مراوغة.",
-        installTitle: "التثبيت", installIntro: "اختر منصتك. يتحقق المثبّت من Python ومن بصمة SHA256 للماسح المنزّل قبل كتابة أي ملف تنفيذي.",
+        skip: "انتقل إلى المحتوى", source: "الشيفرة", menu: "القائمة", close: "إغلاق",
+        navFeatures: "المزايا", navDemo: "العرض", navInstall: "التثبيت", navUsage: "الاستخدام", navReference: "المرجع", navLegal: "قانوني",
+        loaderTag: "تشغيل واجهة الفحص",
+        heroEyebrow: "تدقيق دفاعي للشبكات · الإصدار 1.0.0",
+        heroTitleA: "افحص ما تملكه.",
+        heroTitleB: "وأثبت ما هو مفتوح.",
+        heroLead: "‏klahack-portscope ماسح شفاف لاتصالات TCP من تطوير klahack. ملف Python واحد قابل للتدقيق، بلا اعتماديات تشغيل، وضوابط للاستخدام المسؤول مدمجة في مسار العمل لا مضافة لاحقًا.",
+        heroCtaInstall: "ثبّت الآن", heroCtaDemo: "شاهد الفحص",
+        chipRelease: "إصدار", chipDeps: "اعتماديات تشغيل", chipLicense: "ترخيص",
+        scrollHint: "مرّر لبدء الفحص",
+        marquee: "فحص اتصال TCP ✦ بلا اعتماديات ✦ IPv4 و IPv6 ✦ JSON و CSV ✦ الأهداف المصرّح بها فقط ✦ ملف Python واحد ✦",
+        marquee2: "نزّل ✦ افحص ✦ تحقق من SHA256 ✦ شغّل ✦ افحص ما تملكه فقط ✦ بلا مزايا تخفٍّ ✦",
+        statsEyebrow: "بالأرقام", statsTitle: "سطح صغير. حدود صارمة.",
+        statFile: "ملف Python واحد للتدقيق، بالمكتبة القياسية فقط",
+        statDeps: "اعتماديات تشغيل، دون أي pip install",
+        statPorts: "منفذًا في قائمة الأكثر شيوعًا المدمجة",
+        statThreads: "أقصى عدد لخيوط العمل، والافتراضي 100",
+        featuresEyebrow: "القدرات",
+        featuresTitleA: "محمول في تصميمه.", featuresTitleB: "دفاعي افتراضيًا.",
+        featuresIntro: "تعمل شيفرة Python نفسها القابلة للتدقيق على Linux وTermux وmacOS وWindows Terminal وPowerShell دون تثبيت أي حزمة تشغيل.",
+        f1t: "بلا اعتماديات", f1d: "مبني بالكامل بمكتبة Python القياسية ويُوزَّع كملف واحد قابل للتشغيل والقراءة ومراجعته كاملًا.",
+        f2t: "متعدد المنصات", f2d: "معالجة صريحة لـ IPv4 وIPv6 ورموز مقابس POSIX وWindows وقدرات الطرفيات وأدوات تثبيت محمولة.",
+        f3t: "حدود آمنة", f3d: "توسيع محدود لنطاقات CIDR، وبوابة تصريح، ومهل لكل مقبس، وإبطاء اختياري، وإيقاف آمن عند Ctrl+C.",
+        f4t: "مخرجات مفيدة", f4d: "جداول مقروءة مع JSON وCSV ثابتَي المخطط للأتمتة الدفاعية وجمع الأدلة ومقارنة النتائج زمنيًا.",
+        f5t: "حماية اللافتات", f5d: "تُحدَّد لافتات الخدمات بـ 256 بايت وتُنظَّف من تسلسلات ANSI ومحارف التحكم قبل وصولها إلى طرفيتك.",
+        f6t: "بلا مزايا تخفٍّ", f6d: "فحص اتصال TCP فقط — بلا انتحال أو حزم خام أو مراوغة أو استغلال، عن قصد وبشكل دائم.",
+        demoEyebrow: "مخرجات حية", demoTitle: "ثلاث صيغ. فحص واحد.",
+        demoIntro: "تذهب النتائج إلى stdout، بينما تذهب الهوية والتحذيرات والتقدم إلى stderr، فيبقى التمرير عبر الأنابيب نظيفًا.",
+        demoNote1: "تظهر المنافذ المفتوحة والمصفّاة افتراضيًا، وتبقى المغلقة محسوبة في الملخص. استخدم ‎--verbose‎ لعرض كل الحالات أو ‎--open-only‎ لتضييق النتائج.",
+        demoNote2: "يُطبع تحذير الاستخدام المسؤول دائمًا على stderr، حتى في وضع ‎--quiet‎.",
+        demoNote3: "مخططا JSON وCSV ثابتان، ما يتيح لمسارات العمل الدفاعية مقارنة الفحوص بأمان.",
+        replay: "إعادة التشغيل", fmtTable: "جدول",
+        installEyebrow: "التثبيت",
+        installTitleA: "أمر واحد.", installTitleB: "يُتحقق منه قبل التنفيذ.",
+        installIntro: "المثبّتات غير تراكمية الأثر، وتتحقق من وجود Python ومن بصمة الماسح المنزَّل مقابل SHA256SUMS، ثم تثبّت الأمر باسم klahack-portscope.",
         linuxTitle: "صدفة Linux", termuxTitle: "Termux على Android", macTitle: "طرفية macOS", windowsTitle: "Windows PowerShell",
-        unixHint: "شغّل الأمر في الطرفية. فحص السكربت أولًا هو النهج الأكثر أمانًا الموضح أدناه.",
-        windowsHint: "يعمل دون صلاحيات المدير. افتح طرفية جديدة بعد التثبيت.", copy: "نسخ", copied: "تم النسخ!", copyFailed: "حدّد الأمر وانسخه يدويًا.",
-        trustEyebrow: "تحقق قبل التنفيذ", safeTitle: "الطريقة الأكثر أمانًا: تنزيل ← فحص ← تحقق من SHA256 ← تشغيل",
-        safeIntro: "التمرير المباشر مريح، لكن أداة الأمن تستحق مسار تثبيت متأنيًا.",
-        stepOneTitle: "نزّل", stepOneText: "نزّل المثبّت وملف SHA256SUMS مباشرة من المستودع.",
-        stepTwoTitle: "افحص", stepTwoText: "اقرأ المثبّت وافهم كل أمر سينفذه.",
-        stepThreeTitle: "تحقق", stepThreeText: "قارن بصمة SHA256 قبل الوثوق بالماسح المنزّل.",
-        stepFourTitle: "شغّل", stepFourText: "نفّذ فقط بعد التأكد من الشيفرة والبصمة.",
-        usageTitle: "أمثلة الاستخدام", usageIntro: "ابدأ بنطاق ضيق. تستخدم هذه الأمثلة العنوان المحلي أو عناوين خاصة فقط.",
-        exampleOne: "فحص منافذ الويب والإدارة الشائعة على العنوان المحلي", exampleTwo: "إرجاع أشهر 20 منفذًا بصيغة JSON",
-        exampleThree: "إبطاء تدقيق شبكة خاصة وحفظ CSV", legalTitle: "التصريح إلزامي",
-        legalText: "افحص فقط الشبكات التي تملكها أو لديك إذن كتابي صريح لاختبارها. تتطلب الأهداف العامة تأكيدًا تفاعليًا أو الخيار --i-have-permission عند التشغيل غير التفاعلي. أنت مسؤول عن الالتزام بالقوانين والسياسات المعمول بها."
+        unixHint: "شغّل الأمر في الطرفية. يستخدم المثبّت ‎/usr/local/bin‎ عند توفره، أو ‎~/.local/bin‎ عند غياب sudo.",
+        termuxHint: "يُكتشف Termux تلقائيًا ويُثبَّت الأمر في ‎$PREFIX/bin‎ دون الحاجة إلى صلاحيات الجذر.",
+        macHint: "المثبّت نفسه على POSIX. عند غياب sudo يعود إلى ‎~/.local/bin‎، فأضف هذا المسار إلى PATH.",
+        windowsHint: "تثبيت لكل مستخدم داخل ‎%LOCALAPPDATA%\\klahack-portscope‎ دون صلاحيات المدير. افتح طرفية جديدة بعد التثبيت.",
+        copy: "نسخ", copied: "تم النسخ", copyFailed: "حدّد الأمر وانسخه يدويًا",
+        verifyEyebrow: "تحقق قبل التنفيذ", verifyTitle: "تنزيل ← فحص ← تحقق ← تشغيل",
+        verifyIntro: "التمرير المباشر مريح، لكن أداة أمنية تستحق مسار تثبيت متأنيًا. هذه هي الطريقة الأكثر أمانًا.",
+        s1t: "نزّل", s1d: "نزّل ‎install.sh‎ أو ‎install.ps1‎ مع ملف ‎SHA256SUMS‎ مباشرة من المستودع.",
+        s2t: "افحص", s2d: "اقرأ المثبّت كاملًا وافهم كل أمر سينفّذه على جهازك.",
+        s3t: "تحقق", s3d: "نزّل ‎klahack_portscope.py‎ وقارن بصمة SHA256 الخاصة به مع ‎SHA256SUMS‎ قبل الوثوق به.",
+        s4t: "شغّل", s4d: "نفّذ المثبّت الذي راجعته فقط بعد أن تطابق الشيفرة والبصمة توقعاتك.",
+        directTitle: "التشغيل مباشرة من المصدر", directIntro: "لا حاجة إلى تثبيت — الملف الواحد قابل للتشغيل كما هو.",
+        uninstallTitle: "تحقق يدويًا من البصمة", uninstallIntro: "قارن البصمة بنفسك قبل تشغيل أي شيء.",
+        usageEyebrow: "الاستخدام",
+        usageTitleA: "ابدأ بنطاق ضيق.", usageTitleB: "ولا توسّعه إلا بتصريح.",
+        usageIntro: "يطبع كل تشغيل شعارًا مختصرًا على stderr ما لم تستخدم ‎--quiet‎. تستخدم هذه الأمثلة العنوان المحلي أو عناوين خاصة فقط.",
+        ex1: "فحص منافذ محددة على العنوان المحلي مع مدى صغير",
+        ex2: "فحص أشهر 20 منفذًا على localhost وإخراج JSON",
+        ex3: "إبطاء فحص مصرّح به لشبكة خاصة وحفظ CSV",
+        ex4: "تأكيد التصريح لهدف عام في التشغيل غير التفاعلي",
+        ex4note: "هذا الخيار تأكيد للتصريح وليس بديلًا عن إذن كتابي فعلي.",
+        refEyebrow: "المرجع", refTitle: "كل الخيارات في جدول واحد.",
+        refIntro: "‏‎--ports‎ و‎--top-ports‎ لا يجتمعان، وكذلك ‎-4‎/‎-6‎ و‎--json‎/‎--csv‎ و‎--verbose‎/‎--open-only‎.",
+        refCaption: "خيارات سطر الأوامر", colOption: "الخيار", colDescription: "الوصف",
+        optTarget: "عنوان IP أو اسم مضيف أو CIDR أو أهداف مفصولة بفواصل.",
+        optPorts: "منافذ ومديات مختلطة مثل 22,80,443,8000-8100، تُزال تكراراتها وتُرتَّب.",
+        optTop: "فحص أول N منفذًا من قائمة الشيوع المدمجة (من 1 إلى 100).",
+        optTimeout: "مهلة كل مقبس بالثواني؛ الافتراضي 1.0.",
+        optThreads: "عدد خيوط العمل؛ الافتراضي 100 والأقصى 1000.",
+        optDelay: "تأخير بين إرسال المهام للإبطاء؛ الافتراضي 0.",
+        optFamily: "فرض IPv4 أو IPv6، وإلا يُحلّ الاثنان عبر getaddrinfo.",
+        optBanner: "قراءة سلبية حتى 256 بايت، مع طلب HTTP HEAD بسيط عند الاقتضاء.",
+        optFormat: "اختيار مخرجات قابلة للمعالجة آليًا.",
+        optOutput: "كتابة المخرجات المختارة في ملف بدل stdout.",
+        optQuiet: "إخفاء شعار ASCII والتقدم؛ ويبقى التحذير القانوني ظاهرًا.",
+        optVerbose: "تضمين صفوف النتائج المفتوحة والمغلقة والمصفّاة.",
+        optOpenOnly: "تضمين صفوف المنافذ المفتوحة فقط.",
+        optNoColor: "تعطيل ألوان ANSI في النتائج.",
+        optNoProgress: "تعطيل عرض التقدم.",
+        optMaxHosts: "حد أقصى للمضيفين بعد التوسيع أو التحليل؛ الافتراضي 256.",
+        optPermission: "تأكيد التصريح للأهداف العامة في التشغيل غير التفاعلي.",
+        optVersion: "طباعة klahack-portscope 1.0.0 by klahack.",
+        optHelp: "عرض مساعدة الأمر.",
+        exitTitle: "رموز الخروج", colCode: "الرمز", colMeaning: "المعنى",
+        exit0: "اكتمل الفحص بنجاح.",
+        exit1: "خطأ في وقت التشغيل أو الملفات أو المقابس.",
+        exit2: "إدخال غير صالح أو عدم تأكيد التصريح.",
+        exit130: "إيقاف عبر Ctrl+C مع إظهار النتائج الجزئية المكتملة عند توفرها.",
+        schemaTitle: "شكل JSON وCSV",
+        schemaIntro: "يحتوي JSON دائمًا على هوية الأداة والطوابع الزمنية والمدة والأهداف المجمّعة والملخص.",
+        howEyebrow: "آلية العمل",
+        howTitleA: "فحص اتصال عادي.", howTitleB: "لا شيء مخفي.",
+        howIntro: "تنفّذ الأداة فحص اتصال TCP كاملًا عبر واجهة المقابس العادية في نظام التشغيل، ولا تنشئ حزمًا خامًا إطلاقًا.",
+        stateOpen: "نجح اتصال TCP، أي أن خدمة قبلت المصافحة على ذلك المنفذ.",
+        stateClosed: "رُفض الاتصال (ECONNREFUSED أو WSAECONNREFUSED 10061 على Windows)، أي أن المضيف استجاب.",
+        stateFiltered: "انتهت المهلة أو تعذّر المسار أو فشل الاتصال بطريقة لا تثبت أن المنفذ مغلق.",
+        engineTitle: "محرك تنفيذ محدود",
+        engine1: "تُرسل المهام إلى ThreadPoolExecutor على دفعات محدودة بدل توليد كل أزواج المضيف والمنفذ مسبقًا.",
+        engine2: "كل مقبس يُدار ضمن سياق مُدار، فتُحرَّر الموارد بشكل حتمي.",
+        engine3: "يوقف Ctrl+C المهام الجديدة وينتظر الدفعة الجارية الصغيرة ويُظهر النتائج الجزئية ويعيد الرمز 130.",
+        engine4: "تُقرأ اللافتات سلبيًا أولًا، ولا يُرسل طلب HEAD بسيط إلا على منافذ HTTP الشائعة عند عدم وصول بيانات.",
+        gateTitle: "ضوابط التصريح",
+        gate1: "تُصنَّف العناوين بعد تحليلها باستخدام وحدة ipaddress في Python قبل فتح أي مقبس.",
+        gate2: "تمر الأهداف الخاصة والمحلية وعناوين link-local دون سؤال إضافي.",
+        gate3: "أي عنوان آخر يتطلب إجابة yes تفاعليًا أو الخيار ‎--i-have-permission‎ في التشغيل غير التفاعلي.",
+        gate4: "وإلا يرفض الأمر الفحص ويعيد الرمز 2، كما يحد ‎--max-hosts‎ من النطاقات المفرطة.",
+        limitsTitle: "قيود صريحة",
+        limit1: "TCP فقط؛ لا يوجد فحص UDP.",
+        limit2: "يكمل فحص الاتصال مصافحة TCP في نظام التشغيل؛ لا يوجد SYN scan أو حزم خام.",
+        limit3: "أسماء الخدمات مؤشرات مبنية على المنفذ، واللافتات مؤشرات غير موثوقة، وليست تعريفًا قاطعًا.",
+        limit4: "قد تجعل الجدران النارية المنافذ المغلقة أو غير القابلة للوصول تبدو مصفّاة.",
+        limit5: "قد تختلف إجابات DNS وقواعد الخدمات المحلية بين أنظمة التشغيل.",
+        limit6: "هذه أداة تدقيق مركّزة وليست بديلًا عن nmap أو عن تقييم شامل للثغرات.",
+        devTitle: "التطوير والاختبارات",
+        dev1: "تستخدم مجموعة الاختبارات unittest وترتبط بـ 127.0.0.1 فقط، ولا تفحص أي شبكة خارجية.",
+        dev2: "يشغّل التكامل المستمر Python 3.8 و3.12 على Ubuntu وmacOS وWindows.",
+        dev3: "تبني الإصدارات الموسومة ملفات تنفيذية بـ PyInstaller، وهو اعتمادية بناء فقط لا تشغيل.",
+        legalEyebrow: "تحذير قانوني", legalTitle: "التصريح إلزامي.",
+        legalText: "افحص فقط الشبكات التي تملكها أو لديك إذن كتابي صريح لاختبارها. أنت مسؤول عن الالتزام بالقوانين والعقود وسياسات المؤسسة المعمول بها. لا تتضمن الأداة عمدًا أي ميزات للتخفي أو انتحال العناوين أو الحزم الخام أو المراوغة أو الاستغلال.",
+        lp1t: "ملكية أو موافقة كتابية", lp1d: "يجب أن تكون الأهداف أنظمة تملكها أو مصرَّح لك كتابيًا وصراحةً باختبارها.",
+        lp2t: "الأهداف العامة مقيّدة", lp2d: "تتطلب العناوين العامة تأكيدًا تفاعليًا أو الخيار ‎--i-have-permission‎ في التشغيل غير التفاعلي.",
+        lp3t: "مسؤوليتك أنت", lp3d: "يبقى الالتزام بالقوانين والعقود وسياسات المؤسسة على عاتق المشغّل دائمًا.",
+        footProject: "المشروع", footRepo: "مستودع GitHub", footReadme: "ملف README", footChangelog: "سجل التغييرات",
+        footDocs: "في هذه الصفحة", footSafety: "الأمان", footSecurity: "سياسة الأمن", footVerify: "التحقق من البصمات", footLegal: "التحذير القانوني",
+        footBuild: "البناء", footBuild1: "Python 3.8+ · المكتبة القياسية", footBuild2: "Linux · Termux · macOS · Windows", footLicense: "رخصة MIT",
+        footNote: "اختبار مصرّح به فقط. بلا مزايا تخفٍّ.", footTop: "العودة إلى الأعلى ↑",
+        langSwitchLabel: "التبديل إلى الإنجليزية"
       }
     };
 
-    const rawBase = `https://raw.githubusercontent.com/${CONFIG.user}/${CONFIG.repo}/${CONFIG.branch}`;
-    const repoUrl = `https://github.com/${CONFIG.user}/${CONFIG.repo}`;
-    const commands = Object.freeze({
-      unix: `curl -fsSL ${rawBase}/install.sh | bash`,
-      windows: `irm ${rawBase}/install.ps1 | iex`
-    });
-    let language = "en";
+    var lang = "en";
+    var $ = function (sel, root) { return (root || document).querySelector(sel); };
+    var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+    var t = function (key) { return (TEXT[lang] && TEXT[lang][key]) || TEXT.en[key] || ""; };
 
+    /* =========================================================
+       2 · Word splitting for display headings
+       ========================================================= */
+    function splitElement(el) {
+      var text = el.getAttribute("data-text") || el.textContent;
+      el.setAttribute("data-text", text);
+      var words = text.split(/\s+/).filter(Boolean);
+      el.textContent = "";
+      words.forEach(function (word, index) {
+        var outer = document.createElement("span");
+        outer.className = "word";
+        var inner = document.createElement("i");
+        inner.textContent = word;
+        inner.style.setProperty("--wd", (index * 0.055).toFixed(3) + "s");
+        outer.appendChild(inner);
+        el.appendChild(outer);
+        if (index < words.length - 1) el.appendChild(document.createTextNode(" "));
+      });
+      el.classList.add("split-ready");
+    }
+
+    function splitAll() {
+      $$(".split").forEach(function (el) {
+        el.removeAttribute("data-text");
+        splitElement(el);
+        if (reduced) { el.classList.add("split-in"); return; }
+        var rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight * 0.92) el.classList.add("split-in");
+      });
+    }
+
+    /* =========================================================
+       3 · Language switching (English default, Arabic RTL)
+       ========================================================= */
     function storedLanguage() {
       try {
-        const saved = localStorage.getItem("klahack-portscope-language");
+        var saved = window.localStorage.getItem("klahack-portscope-language");
         return saved === "ar" || saved === "en" ? saved : null;
-      } catch (error) {
-        return null;
-      }
+      } catch (error) { return null; }
     }
 
-    function applyLanguage(nextLanguage) {
-      language = nextLanguage === "ar" ? "ar" : "en";
-      document.documentElement.lang = language;
-      document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
-      document.querySelectorAll("[data-i18n]").forEach((element) => {
-        const value = TEXT[language][element.dataset.i18n];
-        if (value) element.textContent = value;
+    function applyLanguage(next) {
+      lang = next === "ar" ? "ar" : "en";
+      var root = document.documentElement;
+      root.lang = lang;
+      root.dir = lang === "ar" ? "rtl" : "ltr";
+
+      $$("[data-i18n]").forEach(function (el) {
+        var value = t(el.getAttribute("data-i18n"));
+        if (value) {
+          if (el.classList.contains("split")) { el.setAttribute("data-text", value); el.textContent = value; }
+          else { el.textContent = value; }
+        }
       });
-      const toggle = document.getElementById("language-toggle");
-      toggle.textContent = language === "en" ? "العربية" : "English";
-      toggle.setAttribute("aria-label", language === "en" ? "Switch to Arabic" : "التبديل إلى الإنجليزية");
-      try {
-        localStorage.setItem("klahack-portscope-language", language);
-      } catch (error) {
-        /* The page remains functional when storage is blocked. */
-      }
-      renderTerminal();
+
+      var toggle = $("#lang-toggle");
+      toggle.textContent = lang === "en" ? "العربية" : "English";
+      toggle.setAttribute("lang", lang === "en" ? "ar" : "en");
+      toggle.setAttribute("aria-label", t("langSwitchLabel"));
+
+      buildMarquees();
+      splitAll();
+      renderTerminal(currentFormat, true);
+
+      try { window.localStorage.setItem("klahack-portscope-language", lang); } catch (error) { /* storage blocked */ }
     }
 
-    function activateTab(tab) {
-      document.querySelectorAll("[role='tab']").forEach((candidate) => {
-        const active = candidate === tab;
-        candidate.setAttribute("aria-selected", String(active));
-        candidate.tabIndex = active ? 0 : -1;
-        document.getElementById(`panel-${candidate.dataset.panel}`).hidden = !active;
+    /* =========================================================
+       4 · Marquee
+       ========================================================= */
+    var marquees = [];
+
+    function buildMarquees() {
+      $$("[data-marquee]").forEach(function (wrap, index) {
+        var track = $("[data-marquee-track]", wrap);
+        var phrase = index === 0 ? t("marquee") : t("marquee2");
+        track.textContent = "";
+        var parts = phrase.split("✦").map(function (p) { return p.trim(); }).filter(Boolean);
+        for (var copy = 0; copy < 2; copy++) {
+          var group = document.createElement("span");
+          group.className = "marquee-item";
+          parts.forEach(function (part) {
+            var word = document.createElement("span");
+            word.textContent = part;
+            group.appendChild(word);
+            var star = document.createElement("span");
+            star.className = "marquee-star";
+            star.textContent = "✦";
+            group.appendChild(star);
+          });
+          track.appendChild(group);
+        }
+      });
+      setupMarquees();
+    }
+
+    function setupMarquees() {
+      marquees = $$("[data-marquee]").map(function (wrap) {
+        var track = $("[data-marquee-track]", wrap);
+        return { wrap: wrap, track: track, x: 0, speed: parseFloat(wrap.getAttribute("data-speed")) || 0.5, width: 0 };
+      });
+      measureMarquees();
+    }
+
+    function measureMarquees() {
+      marquees.forEach(function (m) {
+        var first = m.track.firstElementChild;
+        if (!first) { m.width = 0; return; }
+        var unit = first.getBoundingClientRect().width + 35;
+        m.width = unit;
+        if (unit <= 0) return;
+        var needed = Math.ceil((m.wrap.getBoundingClientRect().width + unit) / unit) + 1;
+        while (m.track.children.length < needed && m.track.children.length < 12) {
+          m.track.appendChild(first.cloneNode(true));
+        }
       });
     }
 
-    async function copyText(text, button) {
-      const status = button.closest(".panel, .examples > div").querySelector(".copy-status");
-      try {
-        if (!navigator.clipboard || !window.isSecureContext) throw new Error("Clipboard API unavailable");
-        await navigator.clipboard.writeText(text);
-        status.textContent = TEXT[language].copied;
-      } catch (error) {
-        const area = document.createElement("textarea");
-        area.value = text;
-        area.setAttribute("readonly", "");
-        area.style.position = "fixed";
-        area.style.opacity = "0";
-        document.body.appendChild(area);
-        area.select();
-        const copied = document.execCommand("copy");
-        area.remove();
-        status.textContent = copied ? TEXT[language].copied : TEXT[language].copyFailed;
-      }
-      window.setTimeout(() => { status.textContent = ""; }, 2200);
-    }
-
-    const terminalLines = [
-      "$ klahack-portscope -t 127.0.0.1 -p 22,80,443",
-      "+---------------------+",
-      "| klahack-portscope   |",
-      "| by klahack          |",
-      "+---------------------+",
-      "Target: 127.0.0.1 (127.0.0.1)",
-      "PORT   STATE      SERVICE",
-      "22     open       ssh",
-      "443    filtered   https",
-      "Summary: open=1 closed=1 filtered=1"
+    /* =========================================================
+       5 · Loader
+       ========================================================= */
+    var loaderLines = [
+      "> init klahack-portscope@1.0.0",
+      "> python: 3.8+ detected · stdlib only",
+      "> resolving 127.0.0.1 ... ok",
+      "> authorization gate: loopback allowed",
+      "> warming 100 worker threads",
+      "> interface ready"
     ];
-    let terminalTimer = null;
 
-    function renderTerminal() {
-      const terminal = document.getElementById("terminal-output");
-      window.clearInterval(terminalTimer);
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        terminal.textContent = terminalLines.join("\n");
+    function runLoader(done) {
+      var loader = $("#loader");
+      if (reduced) {
+        loader.parentNode.removeChild(loader);
+        done();
         return;
       }
-      let line = 0;
-      terminal.textContent = "";
-      terminalTimer = window.setInterval(() => {
-        terminal.textContent = terminalLines.slice(0, line + 1).join("\n");
-        line += 1;
-        if (line >= terminalLines.length) {
-          window.clearInterval(terminalTimer);
-          terminal.insertAdjacentHTML("beforeend", ' <span class="cursor" aria-hidden="true"></span>');
+      document.body.classList.add("is-locked");
+      var num = $("#loader-num");
+      var fill = $("#loader-fill");
+      var log = $("#loader-log");
+      var value = 0;
+      var lineIndex = 0;
+      var start = performance.now();
+
+      var writer = window.setInterval(function () {
+        if (lineIndex >= loaderLines.length) { window.clearInterval(writer); return; }
+        log.textContent += (lineIndex ? "\n" : "") + loaderLines[lineIndex];
+        lineIndex += 1;
+      }, 230);
+
+      function tick(now) {
+        var elapsed = now - start;
+        var target = Math.min(100, (elapsed / 1650) * 100);
+        value += (target - value) * 0.18;
+        var shown = Math.min(100, Math.round(value));
+        num.textContent = shown < 10 ? "00" + shown : shown < 100 ? "0" + shown : "100";
+        fill.style.width = shown + "%";
+        if (shown >= 100) {
+          window.clearInterval(writer);
+          log.textContent = loaderLines.join("\n");
+          window.setTimeout(function () {
+            loader.classList.add("is-done");
+            document.body.classList.remove("is-locked");
+            window.setTimeout(function () { if (loader.parentNode) loader.parentNode.removeChild(loader); }, 1000);
+            done();
+          }, 260);
+          return;
         }
-      }, 190);
+        window.requestAnimationFrame(tick);
+      }
+      window.requestAnimationFrame(tick);
     }
 
-    document.querySelectorAll("[data-command]").forEach((element) => {
-      element.textContent = commands[element.dataset.command];
-    });
-    document.querySelectorAll("#repo-link, #footer-repo-link").forEach((link) => { link.href = repoUrl; });
-    document.getElementById("language-toggle").addEventListener("click", () => applyLanguage(language === "en" ? "ar" : "en"));
-    document.querySelectorAll("[role='tab']").forEach((tab, index, tabs) => {
-      tab.addEventListener("click", () => activateTab(tab));
-      tab.addEventListener("keydown", (event) => {
-        if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-        event.preventDefault();
-        const direction = event.key === "ArrowRight" ? 1 : -1;
-        const next = tabs[(index + direction + tabs.length) % tabs.length];
-        activateTab(next);
-        next.focus();
-      });
-    });
-    document.querySelectorAll("[data-copy], [data-copy-text]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const text = button.dataset.copyText || commands[button.dataset.copy];
-        copyText(text, button);
-      });
-    });
+    /* =========================================================
+       6 · Custom cursor + magnetic buttons
+       ========================================================= */
+    var magnets = [];
 
-    applyLanguage(storedLanguage() || (navigator.language && navigator.language.toLowerCase().startsWith("ar") ? "ar" : "en"));
+    function initCursor() {
+      if (reduced || coarse) return;
+      var dot = $("#cursor-dot");
+      var ring = $("#cursor-ring");
+      var mx = window.innerWidth / 2, my = window.innerHeight / 2;
+      var rx = mx, ry = my;
+
+      document.addEventListener("mousemove", function (event) {
+        mx = event.clientX; my = event.clientY;
+        document.body.classList.add("cursor-ready");
+        document.body.classList.remove("cursor-hidden");
+      }, { passive: true });
+
+      document.addEventListener("mouseleave", function () { document.body.classList.add("cursor-hidden"); });
+
+      var hotSelector = "a, button, .feature, .stat, input, summary, .step, .example, [role='tab']";
+      document.addEventListener("mouseover", function (event) {
+        var target = event.target;
+        if (target && target.closest && target.closest(hotSelector)) document.body.classList.add("cursor-hot");
+      }, { passive: true });
+      document.addEventListener("mouseout", function (event) {
+        var target = event.target;
+        if (target && target.closest && target.closest(hotSelector)) document.body.classList.remove("cursor-hot");
+      }, { passive: true });
+
+      (function loop() {
+        rx += (mx - rx) * 0.16;
+        ry += (my - ry) * 0.16;
+        dot.style.transform = "translate3d(" + mx + "px," + my + "px,0)";
+        ring.style.transform = "translate3d(" + rx + "px," + ry + "px,0)";
+        window.requestAnimationFrame(loop);
+      })();
+    }
+
+    function initMagnets() {
+      if (reduced || coarse) return;
+      magnets = $$(".magnetic, .btn");
+      magnets.forEach(function (el) {
+        var raf = null;
+        el.addEventListener("mousemove", function (event) {
+          var rect = el.getBoundingClientRect();
+          var dx = event.clientX - (rect.left + rect.width / 2);
+          var dy = event.clientY - (rect.top + rect.height / 2);
+          if (raf) window.cancelAnimationFrame(raf);
+          raf = window.requestAnimationFrame(function () {
+            el.style.transform = "translate(" + (dx * 0.28).toFixed(2) + "px," + (dy * 0.38).toFixed(2) + "px)";
+          });
+        });
+        el.addEventListener("mouseleave", function () {
+          if (raf) window.cancelAnimationFrame(raf);
+          el.style.transform = "translate(0,0)";
+        });
+      });
+    }
+
+    /* =========================================================
+       7 · Scroll behaviour: reveal, progress, parallax, header
+       ========================================================= */
+    function initReveals() {
+      var targets = $$(".reveal, .split");
+      if (reduced || !("IntersectionObserver" in window)) {
+        targets.forEach(function (el) { el.classList.add("is-in"); el.classList.add("split-in"); });
+        return;
+      }
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-in");
+          if (entry.target.classList.contains("split")) entry.target.classList.add("split-in");
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+      targets.forEach(function (el) { observer.observe(el); });
+    }
+
+    function initScroll() {
+      var header = $("#site-header");
+      var fill = $("#progress-fill");
+      var parallaxItems = $$("[data-parallax]");
+      var navLinks = $$(".nav-link");
+      var sections = navLinks.map(function (link) { return document.querySelector(link.getAttribute("href")); });
+      var lastY = window.scrollY;
+      var ticking = false;
+
+      function update() {
+        var y = window.scrollY;
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        var ratio = max > 0 ? Math.min(1, y / max) : 0;
+        fill.style.width = (ratio * 100).toFixed(2) + "%";
+
+        header.classList.toggle("is-stuck", y > 40);
+        if (!$("#nav-links").classList.contains("is-open")) {
+          header.classList.toggle("is-hidden", y > 320 && y > lastY);
+        }
+
+        if (!reduced) {
+          parallaxItems.forEach(function (el) {
+            var factor = parseFloat(el.getAttribute("data-parallax")) || 0.1;
+            el.style.transform = "translate3d(0," + (-y * factor).toFixed(2) + "px,0)";
+          });
+        }
+
+        var activeIndex = -1;
+        sections.forEach(function (section, index) {
+          if (!section) return;
+          var rect = section.getBoundingClientRect();
+          if (rect.top <= window.innerHeight * 0.4) activeIndex = index;
+        });
+        navLinks.forEach(function (link, index) { link.classList.toggle("is-active", index === activeIndex); });
+
+        lastY = y;
+        ticking = false;
+      }
+
+      window.addEventListener("scroll", function () {
+        if (!ticking) { window.requestAnimationFrame(update); ticking = true; }
+      }, { passive: true });
+      update();
+    }
+
+    /* =========================================================
+       8 · Marquee + counters animation loop
+       ========================================================= */
+    function initMarqueeLoop() {
+      if (reduced) return;
+      var lastScroll = window.scrollY;
+      var boost = 0;
+      window.addEventListener("scroll", function () {
+        var y = window.scrollY;
+        boost += (y - lastScroll) * 0.08;
+        lastScroll = y;
+      }, { passive: true });
+
+      (function loop() {
+        boost *= 0.92;
+        marquees.forEach(function (m) {
+          if (!m.width) return;
+          m.x -= m.speed + boost * (m.speed >= 0 ? 1 : -1);
+          if (m.x <= -m.width) m.x += m.width;
+          if (m.x > 0) m.x -= m.width;
+          m.track.style.transform = "translate3d(" + m.x.toFixed(2) + "px,0,0)";
+        });
+        window.requestAnimationFrame(loop);
+      })();
+    }
+
+    function initCounters() {
+      var nums = $$("[data-count]");
+      if (reduced || !("IntersectionObserver" in window)) {
+        nums.forEach(function (el) { el.textContent = el.getAttribute("data-count"); });
+        return;
+      }
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          var el = entry.target;
+          var target = parseInt(el.getAttribute("data-count"), 10) || 0;
+          var startTime = null;
+          function step(now) {
+            if (!startTime) startTime = now;
+            var p = Math.min(1, (now - startTime) / 1400);
+            var eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = String(Math.round(target * eased));
+            if (p < 1) window.requestAnimationFrame(step);
+          }
+          window.requestAnimationFrame(step);
+          observer.unobserve(el);
+        });
+      }, { threshold: 0.5 });
+      nums.forEach(function (el) { el.textContent = "0"; observer.observe(el); });
+    }
+
+    /* =========================================================
+       9 · Canvas: animated port scanning visual
+       ========================================================= */
+    function initCanvas() {
+      var canvas = $("#scan-canvas");
+      if (!canvas || !canvas.getContext) return;
+      var ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      var dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var W = 0, H = 0;
+      var cells = [];
+      var packets = [];
+      var hub = { x: 0, y: 0 };
+      var sweep = 0;
+      var running = false;
+      var rafId = null;
+
+      var CREAM = "243,239,227";
+      var ACID = "200,255,51";
+
+      function layout() {
+        var rect = canvas.getBoundingClientRect();
+        W = Math.max(320, rect.width);
+        H = Math.max(360, rect.height);
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        var narrow = W < 760;
+        var cols = narrow ? 8 : W < 1200 ? 12 : 16;
+        var rows = narrow ? 10 : 8;
+        var areaX = narrow ? W * 0.08 : W * 0.42;
+        var areaW = narrow ? W * 0.84 : W * 0.52;
+        var areaY = narrow ? H * 0.1 : H * 0.14;
+        var areaH = narrow ? H * 0.5 : H * 0.6;
+        hub.x = narrow ? W * 0.5 : W * 0.16;
+        hub.y = narrow ? H * 0.78 : H * 0.52;
+
+        cells = [];
+        var gapX = areaW / cols;
+        var gapY = areaH / rows;
+        for (var r = 0; r < rows; r++) {
+          for (var c = 0; c < cols; c++) {
+            cells.push({
+              x: areaX + gapX * c + gapX / 2,
+              y: areaY + gapY * r + gapY / 2,
+              size: Math.min(gapX, gapY) * 0.26,
+              state: "idle",
+              energy: 0,
+              port: 1 + ((r * cols + c) * 7919) % 65535
+            });
+          }
+        }
+        sweep = 0;
+        packets = [];
+      }
+
+      function pickState() {
+        var roll = Math.random();
+        if (roll < 0.14) return "open";
+        if (roll < 0.52) return "filtered";
+        return "closed";
+      }
+
+      function emit(cell) {
+        if (packets.length > 90) return;
+        packets.push({ cell: cell, p: 0, speed: 0.012 + Math.random() * 0.016 });
+      }
+
+      function drawStatic() {
+        ctx.clearRect(0, 0, W, H);
+        cells.forEach(function (cell, index) {
+          cell.state = index % 7 === 0 ? "open" : index % 3 === 0 ? "filtered" : "closed";
+          cell.energy = cell.state === "open" ? 1 : 0.5;
+        });
+        drawGrid();
+        cells.forEach(drawCell);
+        drawHub();
+      }
+
+      function drawGrid() {
+        ctx.save();
+        ctx.strokeStyle = "rgba(" + CREAM + ",0.05)";
+        ctx.lineWidth = 1;
+        var step = W < 760 ? 48 : 72;
+        for (var x = 0; x < W; x += step) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      function drawHub() {
+        ctx.save();
+        for (var i = 1; i <= 3; i++) {
+          var radius = 18 * i + (sweep * 40) % 40;
+          ctx.beginPath();
+          ctx.arc(hub.x, hub.y, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(" + ACID + "," + (0.16 / i).toFixed(3) + ")";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+        ctx.beginPath();
+        ctx.arc(hub.x, hub.y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = "rgb(" + ACID + ")";
+        ctx.shadowColor = "rgba(" + ACID + ",0.8)";
+        ctx.shadowBlur = 18;
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawCell(cell) {
+        var s = cell.size;
+        ctx.save();
+        ctx.translate(cell.x, cell.y);
+        if (cell.state === "open") {
+          ctx.shadowColor = "rgba(" + ACID + ",0.75)";
+          ctx.shadowBlur = 16 * cell.energy;
+          ctx.fillStyle = "rgba(" + ACID + "," + (0.55 + 0.45 * cell.energy).toFixed(3) + ")";
+          ctx.fillRect(-s, -s, s * 2, s * 2);
+        } else if (cell.state === "filtered") {
+          ctx.strokeStyle = "rgba(" + CREAM + "," + (0.2 + 0.4 * cell.energy).toFixed(3) + ")";
+          ctx.lineWidth = 1;
+          ctx.setLineDash([2, 3]);
+          ctx.strokeRect(-s, -s, s * 2, s * 2);
+        } else if (cell.state === "closed") {
+          ctx.fillStyle = "rgba(" + CREAM + "," + (0.1 + 0.2 * cell.energy).toFixed(3) + ")";
+          ctx.beginPath();
+          ctx.arc(0, 0, Math.max(1, s * 0.34), 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = "rgba(" + CREAM + ",0.08)";
+          ctx.beginPath();
+          ctx.arc(0, 0, Math.max(1, s * 0.22), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      function frame() {
+        if (!running) return;
+        ctx.clearRect(0, 0, W, H);
+        drawGrid();
+
+        sweep += 0.0022;
+        if (sweep > 1.12) {
+          sweep = 0;
+          cells.forEach(function (cell) { cell.state = "idle"; cell.energy = 0; });
+        }
+        var sweepX = sweep * W;
+
+        // sweep beam
+        var grad = ctx.createLinearGradient(sweepX - 120, 0, sweepX + 12, 0);
+        grad.addColorStop(0, "rgba(" + ACID + ",0)");
+        grad.addColorStop(1, "rgba(" + ACID + ",0.12)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(sweepX - 120, 0, 132, H);
+        ctx.fillStyle = "rgba(" + ACID + ",0.5)";
+        ctx.fillRect(sweepX, 0, 1, H);
+
+        cells.forEach(function (cell) {
+          if (cell.state === "idle" && cell.x <= sweepX) {
+            cell.state = "scanning";
+            emit(cell);
+          }
+          if (cell.energy < 1 && cell.state !== "idle") cell.energy = Math.min(1, cell.energy + 0.03);
+          drawCell(cell);
+        });
+
+        // packets travelling from the hub to each port cell
+        for (var i = packets.length - 1; i >= 0; i--) {
+          var pk = packets[i];
+          pk.p += pk.speed;
+          var ease = pk.p < 1 ? 1 - Math.pow(1 - pk.p, 2) : 1;
+          var px = hub.x + (pk.cell.x - hub.x) * ease;
+          var py = hub.y + (pk.cell.y - hub.y) * ease;
+
+          ctx.beginPath();
+          ctx.moveTo(hub.x + (pk.cell.x - hub.x) * Math.max(0, ease - 0.14), hub.y + (pk.cell.y - hub.y) * Math.max(0, ease - 0.14));
+          ctx.lineTo(px, py);
+          ctx.strokeStyle = "rgba(" + ACID + ",0.35)";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(px, py, 1.6, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(" + ACID + ",0.9)";
+          ctx.fill();
+
+          if (pk.p >= 1) {
+            pk.cell.state = pickState();
+            pk.cell.energy = 0.2;
+            packets.splice(i, 1);
+          }
+        }
+
+        drawHub();
+        rafId = window.requestAnimationFrame(frame);
+      }
+
+      function start() {
+        if (running || reduced) return;
+        running = true;
+        rafId = window.requestAnimationFrame(frame);
+      }
+      function stop() {
+        running = false;
+        if (rafId) window.cancelAnimationFrame(rafId);
+      }
+
+      layout();
+      if (reduced) { drawStatic(); }
+      else { start(); }
+
+      var resizeTimer = null;
+      window.addEventListener("resize", function () {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(function () {
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          layout();
+          measureMarquees();
+          if (reduced) drawStatic();
+        }, 180);
+      }, { passive: true });
+
+      document.addEventListener("visibilitychange", function () {
+        if (document.hidden) stop(); else start();
+      });
+
+      if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) { if (entry.isIntersecting) start(); else stop(); });
+        }, { threshold: 0.02 });
+        io.observe(canvas);
+      }
+    }
+
+    /* =========================================================
+       10 · Animated terminal demo
+       ========================================================= */
+    var OUTPUTS = {
+      table: [
+        { cls: "t-prompt", text: "$ klahack-portscope -t 127.0.0.1 -p 22,80,443,8080 --banner", type: true },
+        { cls: "t-brand", text: "  +------------------------------------+" },
+        { cls: "t-brand", text: "  |  klahack-portscope 1.0.0           |" },
+        { cls: "t-brand", text: "  |  by klahack · TCP connect scanner  |" },
+        { cls: "t-brand", text: "  +------------------------------------+" },
+        { cls: "t-warn", text: "! Scan only networks you own or are explicitly authorized to test." },
+        { cls: "t-dim", text: "" },
+        { cls: "t-dim", text: "Target: 127.0.0.1 (127.0.0.1)" },
+        { cls: "t-head", text: "PORT   STATE      SERVICE          BANNER" },
+        { cls: "t-dim", text: "-----  ---------  ---------------  ------" },
+        { cls: "t-open", text: "22     open       ssh              SSH-2.0-OpenSSH" },
+        { cls: "t-open", text: "80     open       http             nginx" },
+        { cls: "t-filtered", text: "443    filtered   https" },
+        { cls: "t-closed", text: "8080   closed     http-alt" },
+        { cls: "t-dim", text: "" },
+        { cls: "t-sum", text: "Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s" }
+      ],
+      json: [
+        { cls: "t-prompt", text: "$ klahack-portscope -t localhost --top-ports 20 --json", type: true },
+        { cls: "t-dim", text: "{" },
+        { cls: "t-key", text: "  \"tool\": \"klahack-portscope\"," },
+        { cls: "t-key", text: "  \"author\": \"klahack\"," },
+        { cls: "t-key", text: "  \"version\": \"1.0.0\"," },
+        { cls: "t-dim", text: "  \"started_at\": \"2026-01-01T12:00:00.000Z\"," },
+        { cls: "t-dim", text: "  \"finished_at\": \"2026-01-01T12:00:01.008Z\"," },
+        { cls: "t-dim", text: "  \"duration_s\": 1.008," },
+        { cls: "t-dim", text: "  \"targets\": [{" },
+        { cls: "t-dim", text: "    \"host\": \"127.0.0.1\", \"ip\": \"127.0.0.1\"," },
+        { cls: "t-dim", text: "    \"results\": [{" },
+        { cls: "t-open", text: "      \"port\": 22, \"state\": \"open\"," },
+        { cls: "t-open", text: "      \"service\": \"ssh\", \"banner\": \"SSH-2.0-OpenSSH\"" },
+        { cls: "t-dim", text: "    }]" },
+        { cls: "t-dim", text: "  }]," },
+        { cls: "t-sum", text: "  \"summary\": { \"open\": 1, \"closed\": 1, \"filtered\": 1 }" },
+        { cls: "t-dim", text: "}" }
+      ],
+      csv: [
+        { cls: "t-prompt", text: "$ klahack-portscope -t 192.168.1.10 -p 22,80,443 --csv", type: true },
+        { cls: "t-head", text: "host,ip,port,protocol,state,service,banner" },
+        { cls: "t-open", text: "192.168.1.10,192.168.1.10,22,tcp,open,ssh," },
+        { cls: "t-open", text: "192.168.1.10,192.168.1.10,80,tcp,open,http," },
+        { cls: "t-filtered", text: "192.168.1.10,192.168.1.10,443,tcp,filtered,https," },
+        { cls: "t-dim", text: "" },
+        { cls: "t-sum", text: "Summary: open=2 closed=0 filtered=1 scanned=3 duration=0.642s" }
+      ]
+    };
+
+    var currentFormat = "table";
+    var termTimers = [];
+
+    function clearTermTimers() {
+      termTimers.forEach(function (id) { window.clearTimeout(id); });
+      termTimers = [];
+    }
+
+    function renderTerminal(format, instant) {
+      var body = $("#terminal-body");
+      if (!body) return;
+      currentFormat = format;
+      clearTermTimers();
+      body.textContent = "";
+      var lines = OUTPUTS[format] || OUTPUTS.table;
+
+      if (reduced || instant === "static") {
+        lines.forEach(function (line) { appendLine(body, line, line.text); });
+        return;
+      }
+
+      var delay = 0;
+      lines.forEach(function (line, index) {
+        if (line.type) {
+          var node = appendLine(body, line, "");
+          for (var c = 0; c <= line.text.length; c++) {
+            (function (chars, wait) {
+              termTimers.push(window.setTimeout(function () { node.textContent = line.text.slice(0, chars); }, wait));
+            })(c, delay + c * 22);
+          }
+          delay += line.text.length * 22 + 260;
+        } else {
+          (function (wait) {
+            termTimers.push(window.setTimeout(function () { appendLine(body, line, line.text); }, wait));
+          })(delay);
+          delay += 110;
+        }
+        if (index === lines.length - 1) {
+          termTimers.push(window.setTimeout(function () {
+            var caret = document.createElement("span");
+            caret.className = "caret";
+            body.appendChild(caret);
+          }, delay + 150));
+        }
+      });
+    }
+
+    function appendLine(body, line, text) {
+      var span = document.createElement("span");
+      span.className = line.cls;
+      span.textContent = text;
+      body.appendChild(span);
+      body.appendChild(document.createTextNode("\n"));
+      return span;
+    }
+
+    function initTerminal() {
+      var switches = $$("[data-format]");
+      switches.forEach(function (btn, index) {
+        btn.addEventListener("click", function () {
+          switches.forEach(function (other) {
+            var active = other === btn;
+            other.setAttribute("aria-selected", String(active));
+            other.tabIndex = active ? 0 : -1;
+          });
+          $("#terminal-body").setAttribute("aria-labelledby", btn.id);
+          renderTerminal(btn.getAttribute("data-format"));
+        });
+        btn.addEventListener("keydown", function (event) {
+          if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+          event.preventDefault();
+          var rtl = document.documentElement.dir === "rtl";
+          var dir = (event.key === "ArrowRight") === rtl ? -1 : 1;
+          var next = switches[(index + dir + switches.length) % switches.length];
+          next.focus();
+          next.click();
+        });
+      });
+
+      var replay = $("#replay");
+      if (replay) replay.addEventListener("click", function () { renderTerminal(currentFormat); });
+
+      if (!reduced && "IntersectionObserver" in window) {
+        var started = false;
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !started) { started = true; renderTerminal(currentFormat); }
+          });
+        }, { threshold: 0.25 });
+        io.observe($("#terminal-body"));
+        renderTerminal(currentFormat, "static");
+      } else {
+        renderTerminal(currentFormat, "static");
+      }
+    }
+
+    /* =========================================================
+       11 · Tabs, copy buttons, mobile menu, links
+       ========================================================= */
+    function initInstallTabs() {
+      var tabs = $$(".os-tab");
+      function activate(tab) {
+        tabs.forEach(function (other) {
+          var active = other === tab;
+          other.setAttribute("aria-selected", String(active));
+          other.tabIndex = active ? 0 : -1;
+          var panel = document.getElementById("panel-" + other.getAttribute("data-os"));
+          if (panel) panel.hidden = !active;
+        });
+      }
+      tabs.forEach(function (tab, index) {
+        tab.addEventListener("click", function () { activate(tab); });
+        tab.addEventListener("keydown", function (event) {
+          var keys = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
+          if (keys.indexOf(event.key) === -1) return;
+          event.preventDefault();
+          var rtl = document.documentElement.dir === "rtl";
+          var forward = event.key === "ArrowDown" || (event.key === "ArrowRight") !== rtl;
+          var next = tabs[(index + (forward ? 1 : -1) + tabs.length) % tabs.length];
+          activate(next);
+          next.focus();
+        });
+      });
+
+      var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+      var ua = navigator.userAgent || "";
+      var guess = /Win/i.test(platform) ? "windows" : /Mac|iPhone|iPad/i.test(platform) ? "macos" : /Android/i.test(ua) ? "termux" : "linux";
+      var guessed = document.getElementById("tab-" + guess);
+      if (guessed) activate(guessed);
+    }
+
+    function statusFor(button) {
+      var scope = button.closest(".os-panel, .example, .split-2 > div, .container");
+      return scope ? scope.querySelector(".copy-status") : null;
+    }
+
+    function initCopy() {
+      $$("[data-copy], [data-copy-text]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          var text = button.getAttribute("data-copy-text") || commands[button.getAttribute("data-copy")];
+          if (!text) return;
+          var status = statusFor(button);
+          var say = function (message) {
+            if (!status) return;
+            status.textContent = message;
+            window.setTimeout(function () { status.textContent = ""; }, 2400);
+          };
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(function () { say(t("copied")); }, function () { fallback(text, say); });
+          } else {
+            fallback(text, say);
+          }
+        });
+      });
+    }
+
+    function fallback(text, say) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (error) { ok = false; }
+      area.remove();
+      say(ok ? t("copied") : t("copyFailed"));
+    }
+
+    function initMenu() {
+      var toggle = $("#menu-toggle");
+      var nav = $("#nav-links");
+      toggle.addEventListener("click", function () {
+        var open = toggle.getAttribute("aria-expanded") === "true";
+        toggle.setAttribute("aria-expanded", String(!open));
+        nav.classList.toggle("is-open", !open);
+        var label = toggle.querySelector("[data-i18n]");
+        if (label) {
+          label.setAttribute("data-i18n", !open ? "close" : "menu");
+          label.textContent = t(!open ? "close" : "menu");
+        }
+      });
+      nav.addEventListener("click", function (event) {
+        if (event.target.classList.contains("nav-link")) {
+          nav.classList.remove("is-open");
+          toggle.setAttribute("aria-expanded", "false");
+          var label = toggle.querySelector("[data-i18n]");
+          if (label) { label.setAttribute("data-i18n", "menu"); label.textContent = t("menu"); }
+        }
+      });
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && nav.classList.contains("is-open")) toggle.click();
+      });
+    }
+
+    function initLinks() {
+      $$("[data-command]").forEach(function (el) { el.textContent = commands[el.getAttribute("data-command")]; });
+      var map = {
+        "repo-link": repoUrl,
+        "footer-repo": repoUrl,
+        "footer-readme": repoUrl + "#readme",
+        "footer-changelog": repoUrl + "/blob/" + CONFIG.branch + "/CHANGELOG.md",
+        "footer-security": repoUrl + "/blob/" + CONFIG.branch + "/SECURITY.md",
+        "footer-license": repoUrl + "/blob/" + CONFIG.branch + "/LICENSE"
+      };
+      Object.keys(map).forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) { el.href = map[id]; el.rel = "noopener"; }
+      });
+    }
+
+    /* =========================================================
+       12 · Boot
+       ========================================================= */
+    function boot() {
+      initLinks();
+      initTerminal();
+      initInstallTabs();
+      initCopy();
+      initMenu();
+
+      var toggle = $("#lang-toggle");
+      toggle.addEventListener("click", function () { applyLanguage(lang === "en" ? "ar" : "en"); });
+
+      applyLanguage(storedLanguage() || "en");
+
+      initCursor();
+      initMagnets();
+      initReveals();
+      initScroll();
+      initMarqueeLoop();
+      initCounters();
+      initCanvas();
+
+      if (typeof motionQuery.addEventListener === "function") {
+        motionQuery.addEventListener("change", function (event) {
+          reduced = event.matches;
+          if (reduced) {
+            $$(".reveal, .split").forEach(function (el) { el.classList.add("is-in", "split-in"); });
+            renderTerminal(currentFormat, "static");
+          }
+        });
+      }
+
+      window.addEventListener("load", measureMarquees);
+    }
+
+    function start() {
+      runLoader(function () {
+        $$(".reveal, .split").forEach(function (el) {
+          var rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight) { el.classList.add("is-in"); el.classList.add("split-in"); }
+        });
+      });
+      boot();
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+    else start();
+  })();
   </script>
 </body>
 </html>
