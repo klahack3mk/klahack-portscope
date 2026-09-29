@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install.sh | Author: klahack | MIT License
 
-REPO_RAW="${REPO_RAW:-https://raw.githubusercontent.com/klahack/klahack-portscope/main}"
+REPO_RAW="${REPO_RAW:-https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main}"
 set -euo pipefail
 
 TOOL="klahack-portscope"

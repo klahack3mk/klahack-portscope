@@ -2,7 +2,7 @@
 
 **Portable TCP connect scanning by klahack · فحص محمول لمنافذ TCP من تطوير klahack**
 
-[![Build](https://github.com/klahack/klahack-portscope/actions/workflows/build.yml/badge.svg)](https://github.com/klahack/klahack-portscope/actions/workflows/build.yml)
+[![Build](https://github.com/klahack3mk/klahack-portscope/actions/workflows/build.yml/badge.svg)](https://github.com/klahack3mk/klahack-portscope/actions/workflows/build.yml)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8%2B-3776ab)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-0b7285.svg)](LICENSE)
 [![Runtime dependencies: zero](https://img.shields.io/badge/runtime%20dependencies-zero-198754)](klahack_portscope.py)
@@ -41,7 +41,7 @@ The installers are idempotent, verify the downloaded scanner against `SHA256SUMS
 #### Linux / Termux / macOS
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.sh | bash
 ```
 
 The installer uses `$PREFIX/bin` on Termux, `/usr/local/bin` where available, or `~/.local/bin` when `sudo` is unavailable.
@@ -49,7 +49,7 @@ The installer uses `$PREFIX/bin` on Termux, `/usr/local/bin` where available, or
 #### Windows PowerShell
 
 ```powershell
-irm https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.ps1 | iex
 ```
 
 Installation is per-user under `%LOCALAPPDATA%\klahack-portscope`; no Administrator privileges are needed. Open a new terminal after installation.
@@ -264,13 +264,13 @@ CI runs Python 3.8 and 3.12 on Ubuntu, macOS, and Windows. Tagged releases also 
 Linux أو Termux أو macOS:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.sh | bash
 ```
 
 Windows PowerShell دون صلاحيات المدير:
 
 ```powershell
-irm https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.ps1 | iex
 ```
 
 افتح طرفية جديدة بعد التثبيت على Windows. يتحقق المثبّتان من بصمة SHA256 قبل تثبيت الماسح. والطريقة الأكثر أمانًا هي: تنزيل المثبّت و`SHA256SUMS`، ثم قراءة المثبّت كاملًا، ثم التحقق من البصمة، ثم التنفيذ.

@@ -1278,25 +1278,25 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
             <div class="os-panel" id="panel-linux" role="tabpanel" aria-labelledby="tab-linux">
               <h3 data-i18n="linuxTitle">Linux shell</h3>
               <p data-i18n="unixHint">Run it in a terminal. The installer uses /usr/local/bin where available, or ~/.local/bin when sudo is unavailable.</p>
-              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
+              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
               <div class="copy-status" role="status" aria-live="polite"></div>
             </div>
             <div class="os-panel" id="panel-termux" role="tabpanel" aria-labelledby="tab-termux" hidden>
               <h3 data-i18n="termuxTitle">Termux on Android</h3>
               <p data-i18n="termuxHint">Termux is detected automatically and the command is installed under $PREFIX/bin. No root is required.</p>
-              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
+              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
               <div class="copy-status" role="status" aria-live="polite"></div>
             </div>
             <div class="os-panel" id="panel-macos" role="tabpanel" aria-labelledby="tab-macos" hidden>
               <h3 data-i18n="macTitle">macOS Terminal</h3>
               <p data-i18n="macHint">Same POSIX installer. If sudo is unavailable it falls back to ~/.local/bin, so add that directory to your PATH.</p>
-              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
+              <div class="code-wrap"><pre><code data-command="unix">curl -fsSL https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.sh | bash</code></pre><button class="copy-btn" type="button" data-copy="unix" data-i18n="copy">Copy</button></div>
               <div class="copy-status" role="status" aria-live="polite"></div>
             </div>
             <div class="os-panel" id="panel-windows" role="tabpanel" aria-labelledby="tab-windows" hidden>
               <h3 data-i18n="windowsTitle">Windows PowerShell</h3>
               <p data-i18n="windowsHint">Per-user installation under %LOCALAPPDATA%\klahack-portscope. No Administrator privileges are needed; open a new terminal afterwards.</p>
-              <div class="code-wrap"><pre><code data-command="windows">irm https://raw.githubusercontent.com/klahack/klahack-portscope/main/install.ps1 | iex</code></pre><button class="copy-btn" type="button" data-copy="windows" data-i18n="copy">Copy</button></div>
+              <div class="code-wrap"><pre><code data-command="windows">irm https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main/install.ps1 | iex</code></pre><button class="copy-btn" type="button" data-copy="windows" data-i18n="copy">Copy</button></div>
               <div class="copy-status" role="status" aria-live="polite"></div>
             </div>
           </div>
@@ -1601,7 +1601,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
     var reduced = motionQuery.matches;
     var coarse = coarseQuery.matches;
 
-    var CONFIG = Object.freeze({ user: "klahack", repo: "klahack-portscope", branch: "main" });
+    var CONFIG = Object.freeze({ user: "klahack3mk", repo: "klahack-portscope", branch: "main" });
     var repoUrl = "https://github.com/" + CONFIG.user + "/" + CONFIG.repo;
     var rawBase = "https://raw.githubusercontent.com/" + CONFIG.user + "/" + CONFIG.repo + "/" + CONFIG.branch;
     var commands = Object.freeze({
