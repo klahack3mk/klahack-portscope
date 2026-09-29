@@ -131,21 +131,29 @@ if [ "$TERMUX" = true ]; then
     mkdir -p "$INSTALL_DIR"
     cp "$TMP_DIR/$SOURCE_FILE" "$INSTALL_DIR/$TOOL"
     chmod 0755 "$INSTALL_DIR/$TOOL"
+    ln -sf "$TOOL" "$INSTALL_DIR/kla"
+    ln -sf "$TOOL" "$INSTALL_DIR/klaps"
 elif [ "$(id -u)" -eq 0 ] || { [ -d /usr/local/bin ] && [ -w /usr/local/bin ]; }; then
     INSTALL_DIR="/usr/local/bin"
     mkdir -p "$INSTALL_DIR"
     cp "$TMP_DIR/$SOURCE_FILE" "$INSTALL_DIR/$TOOL"
     chmod 0755 "$INSTALL_DIR/$TOOL"
+    ln -sf "$TOOL" "$INSTALL_DIR/kla"
+    ln -sf "$TOOL" "$INSTALL_DIR/klaps"
 elif command -v sudo >/dev/null 2>&1; then
     INSTALL_DIR="/usr/local/bin"
     sudo mkdir -p "$INSTALL_DIR"
     sudo cp "$TMP_DIR/$SOURCE_FILE" "$INSTALL_DIR/$TOOL"
     sudo chmod 0755 "$INSTALL_DIR/$TOOL"
+    sudo ln -sf "$TOOL" "$INSTALL_DIR/kla"
+    sudo ln -sf "$TOOL" "$INSTALL_DIR/klaps"
 else
     INSTALL_DIR="$HOME/.local/bin"
     mkdir -p "$INSTALL_DIR"
     cp "$TMP_DIR/$SOURCE_FILE" "$INSTALL_DIR/$TOOL"
     chmod 0755 "$INSTALL_DIR/$TOOL"
+    ln -sf "$TOOL" "$INSTALL_DIR/kla"
+    ln -sf "$TOOL" "$INSTALL_DIR/klaps"
     case ":${PATH:-}:" in
         *":$INSTALL_DIR:"*) ;;
         *)

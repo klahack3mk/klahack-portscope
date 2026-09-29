@@ -23,6 +23,7 @@ import os
 import re
 import signal
 import socket
+import subprocess
 import sys
 import time
 
@@ -254,6 +255,43 @@ def parse_targets(spec: str, family: int = 0, max_hosts: int = 256) -> list:
     if not targets:
         raise InputError("target specification resolved to no hosts")
     return targets
+
+
+def discover_network() -> list:
+    """Return devices currently known to the local OS neighbor/ARP table.
+
+    Discovery is intentionally passive: it never probes arbitrary addresses or
+    sends packets. The result is therefore a snapshot of devices the OS has
+    recently seen, not a guarantee that every device on the LAN is present.
+    """
+    addresses = set()
+    # Linux exposes the IPv4 neighbor cache without requiring privileges.
+    try:
+        with open("/proc/net/arp", "r", encoding="ascii") as stream:
+            for line in stream.readlines()[1:]:
+                fields = line.split()
+                if len(fields) >= 4 and fields[2] != "0x0":
+                    try:
+                        ipaddress.ip_address(fields[0])
+                        addresses.add(fields[0])
+                    except ValueError:
+                        pass
+    except (OSError, UnicodeError):
+        pass
+    # Add locally assigned addresses so an otherwise empty cache is useful.
+    try:
+        local = socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET)
+        addresses.update(item[4][0] for item in local)
+    except (OSError, IndexError):
+        pass
+    devices = []
+    for ip_text in sorted(addresses, key=lambda value: ipaddress.ip_address(value).packed):
+        try:
+            name = socket.gethostbyaddr(ip_text)[0]
+        except (OSError, socket.herror):
+            name = "unknown"
+        devices.append({"name": sanitize_banner(name) or "unknown", "ip": ip_text})
+    return devices
 
 
 def address_is_local(ip_text: str) -> bool:
@@ -661,6 +699,7 @@ def build_parser() -> argparse.ArgumentParser:
         allow_abbrev=False,
     )
     parser.add_argument("-t", "--target", help="IP, hostname, CIDR, or comma-separated targets")
+    parser.add_argument("--discover-network", action="store_true", help="list devices in the local OS neighbor table (passive)")
     port_group = parser.add_mutually_exclusive_group()
     port_group.add_argument("-p", "--ports", help="ports such as 22,80,443,8000-8100")
     port_group.add_argument("--top-ports", type=int, metavar="N", help="N common ports (1-100)")
@@ -727,6 +766,10 @@ def _finite_number(value: float) -> bool:
 
 def validate_arguments(args: argparse.Namespace) -> None:
     """Validate numeric and required CLI arguments."""
+    if args.discover_network:
+        if args.target or args.ports is not None or args.top_ports is not None:
+            raise InputError("--discover-network cannot be combined with --target or port options")
+        return
     if not args.target:
         raise InputError("--target is required")
     if args.ports is None and args.top_ports is None:
@@ -749,6 +792,17 @@ def main(argv=None) -> int:
     try:
         args = parser.parse_args(arguments)
         validate_arguments(args)
+        if args.discover_network:
+            devices = discover_network()
+            if args.json:
+                json.dump({"tool": TOOL_NAME, "mode": "network-discovery", "count": len(devices), "devices": devices}, sys.stdout, indent=2)
+                sys.stdout.write("\n")
+            else:
+                print("Devices found: %d" % len(devices))
+                print("%-32s %s" % ("Name", "IP"))
+                for device in devices:
+                    print("%-32s %s" % (device["name"][:32], device["ip"]))
+            return 0
         ports = parse_ports(args.ports) if args.ports is not None else top_ports(args.top_ports)
         family = 4 if args.ipv4 else (6 if args.ipv6 else 0)
         targets = parse_targets(args.target, family, args.max_hosts)

@@ -36,7 +36,7 @@
 
 ### Installation
 
-The installers are idempotent, verify the downloaded scanner against `SHA256SUMS`, and install under the command name `klahack-portscope`.
+The installers are idempotent, verify the downloaded scanner against `SHA256SUMS`, and install under the command names `klahack-portscope`, `kla`, and `klaps` (the last two are short aliases).
 
 #### Linux / Termux / macOS
 
@@ -81,6 +81,7 @@ Every invocation prints the startup brand banner to stderr unless `--quiet` is s
 | Option | Description |
 |---|---|
 | `-t`, `--target TARGET` | IP, hostname, CIDR, or comma-separated targets. |
+| `--discover-network` | Passively list devices in the local OS ARP/neighbor cache, including reverse-DNS name and IP. No packets are sent. Use with `--json` for automation. |
 | `-p`, `--ports PORTS` | Mixed ports/ranges such as `22,80,443,8000-8100`; deduplicated and sorted. |
 | `--top-ports N` | Scan the first `N` ports from the built-in prevalence list (`1` to `100`). |
 | `--timeout SECONDS` | Per-socket timeout; default `1.0`. |
