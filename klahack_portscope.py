@@ -257,6 +257,35 @@ def parse_targets(spec: str, family: int = 0, max_hosts: int = 256) -> list:
     return targets
 
 
+def discover_network_nmap(network: str, timeout: float = 30.0) -> list:
+    """Discover live hosts with the optional nmap utility on an authorized LAN."""
+    try:
+        parsed = ipaddress.ip_network(network, strict=False)
+    except ValueError as exc:
+        raise InputError("invalid --network CIDR: %s" % network) from exc
+    if not parsed.is_private:
+        raise InputError("--network must be a private/local network")
+    try:
+        completed = subprocess.run(
+            ["nmap", "-sn", "-n", "-oG", "-", str(parsed)],
+            capture_output=True, text=True, timeout=timeout, check=False,
+        )
+    except FileNotFoundError as exc:
+        raise InputError("nmap is not installed; run: pkg install nmap") from exc
+    except subprocess.TimeoutExpired as exc:
+        raise InputError("nmap discovery timed out") from exc
+    if completed.returncode not in (0, 1):
+        raise InputError("nmap failed: %s" % sanitize_banner(completed.stderr))
+    devices = []
+    for line in completed.stdout.splitlines():
+        if not line.startswith("Host:") or "Status: Up" not in line:
+            continue
+        match = re.match(r"Host:\s+(\S+)(?:\s+\((.*?)\))?", line)
+        if match:
+            devices.append({"name": sanitize_banner(match.group(2) or "unknown") or "unknown", "ip": match.group(1)})
+    return devices
+
+
 def discover_network() -> list:
     """Return devices currently known to the local OS neighbor/ARP table.
 
@@ -793,7 +822,7 @@ def main(argv=None) -> int:
         args = parser.parse_args(arguments)
         validate_arguments(args)
         if args.discover_network:
-            devices = discover_network()
+            devices = discover_network_nmap(args.network) if args.network else discover_network()
             if args.json:
                 json.dump({"tool": TOOL_NAME, "mode": "network-discovery", "count": len(devices), "devices": devices}, sys.stdout, indent=2)
                 sys.stdout.write("\n")
