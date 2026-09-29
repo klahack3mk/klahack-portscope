@@ -1,5 +1,5 @@
 # install.ps1 | Author: klahack | MIT License
-$REPO_RAW = if ($env:KLAHACK_PORTSCOPE_REPO_RAW) { $env:KLAHACK_PORTSCOPE_REPO_RAW } else { 'https://raw.githubusercontent.com/klahack/klahack-portscope/main' }
+$REPO_RAW = if ($env:KLAHACK_PORTSCOPE_REPO_RAW) { $env:KLAHACK_PORTSCOPE_REPO_RAW } else { 'https://raw.githubusercontent.com/klahack3mk/klahack-portscope/main' }
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
