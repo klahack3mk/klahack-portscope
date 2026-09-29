@@ -728,7 +728,8 @@ def build_parser() -> argparse.ArgumentParser:
         allow_abbrev=False,
     )
     parser.add_argument("-t", "--target", help="IP, hostname, CIDR, or comma-separated targets")
-    parser.add_argument("--discover-network", action="store_true", help="list devices in the local OS neighbor table (passive)")
+    parser.add_argument("--discover-network", action="store_true", help="list devices on a local network")
+    parser.add_argument("--network", metavar="CIDR", help="private CIDR for nmap discovery, e.g. 192.168.1.0/24")
     port_group = parser.add_mutually_exclusive_group()
     port_group.add_argument("-p", "--ports", help="ports such as 22,80,443,8000-8100")
     port_group.add_argument("--top-ports", type=int, metavar="N", help="N common ports (1-100)")
