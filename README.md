@@ -81,7 +81,7 @@ Every invocation prints the startup brand banner to stderr unless `--quiet` is s
 | Option | Description |
 |---|---|
 | `-t`, `--target TARGET` | IP, hostname, CIDR, or comma-separated targets. |
-| `--discover-network` | Passively list devices in the local OS ARP/neighbor cache, including reverse-DNS name and IP. No packets are sent. Use with `--json` for automation. |
+| `--discover-network` | List devices on a local network. Without `--network` it reads the local ARP/neighbor cache; with `--network CIDR` it uses installed Nmap host discovery. |
 | `-p`, `--ports PORTS` | Mixed ports/ranges such as `22,80,443,8000-8100`; deduplicated and sorted. |
 | `--top-ports N` | Scan the first `N` ports from the built-in prevalence list (`1` to `100`). |
 | `--timeout SECONDS` | Per-socket timeout; default `1.0`. |

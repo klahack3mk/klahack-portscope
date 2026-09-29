@@ -163,5 +163,6 @@ else
 fi
 
 say "Installed idempotently at $INSTALL_DIR/$TOOL."
+say "Aliases installed: $INSTALL_DIR/kla and $INSTALL_DIR/klaps."
 "$INSTALL_DIR/$TOOL" --version
 say "Installation verified."
