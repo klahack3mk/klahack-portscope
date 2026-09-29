@@ -101,8 +101,54 @@ class ScannerTests(unittest.TestCase):
         refused_socket.__exit__.assert_called_once()
 
 
+class EncodedCapture:
+    """Text stream test double that enforces a declared output encoding."""
+
+    def __init__(self, encoding: str):
+        self.encoding = encoding
+        self._parts = []
+
+    def write(self, value: str) -> int:
+        value.encode(self.encoding)
+        self._parts.append(value)
+        return len(value)
+
+    def flush(self) -> None:
+        pass
+
+    def getvalue(self) -> str:
+        return "".join(self._parts)
+
+
 class OutputAndSafetyTests(unittest.TestCase):
     """Verify output contracts and defensive safeguards."""
+
+    def test_startup_banner_uses_unicode_when_supported(self):
+        stream = io.StringIO()
+        with mock.patch.object(portscope.sys, "stderr", stream):
+            portscope.print_startup(quiet=False)
+        output = stream.getvalue()
+        self.assertIn("╔══════════════════════════════════════════════╗", output)
+        self.assertIn("P O R T S C O P E  //  TCP RECON", output)
+        self.assertIn(portscope.LEGAL_WARNING, output)
+
+    def test_startup_banner_falls_back_to_ascii_when_needed(self):
+        stream = EncodedCapture("ascii")
+        with mock.patch.object(portscope.sys, "stderr", stream):
+            portscope.print_startup(quiet=False)
+        output = stream.getvalue()
+        self.assertIn("+----------------------------------------------+", output)
+        self.assertIn("P O R T S C O P E  //  TCP RECON", output)
+        self.assertNotIn("╔", output)
+        self.assertIn(portscope.LEGAL_WARNING, output)
+
+    def test_quiet_suppresses_startup_banner_only(self):
+        stream = io.StringIO()
+        with mock.patch.object(portscope.sys, "stderr", stream):
+            portscope.print_startup(quiet=True)
+        output = stream.getvalue()
+        self.assertNotIn("P O R T S C O P E", output)
+        self.assertEqual(output, portscope.LEGAL_WARNING + "\n")
 
     def test_json_schema_contains_branding_and_summary(self):
         targets = [{"host": "localhost", "ip": "127.0.0.1"}]

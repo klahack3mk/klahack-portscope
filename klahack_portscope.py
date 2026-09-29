@@ -34,6 +34,31 @@ LEGAL_WARNING = "Scan only networks you own or have explicit written permission 
 MAX_BANNER_BYTES = 256
 HTTP_PORTS = {80, 443, 3000, 5000, 8000, 8008, 8080, 8081, 8443, 8888}
 
+UNICODE_STARTUP_BANNER = (
+    "╔══════════════════════════════════════════════╗\n"
+    "║  ██╗  ██╗██╗      █████╗ ██████╗ ██╗  ██╗  ║\n"
+    "║  ██║ ██╔╝██║     ██╔══██╗██╔══██╗██║ ██╔╝  ║\n"
+    "║  █████╔╝ ██║     ███████║██████╔╝█████╔╝   ║\n"
+    "║  ██╔═██╗ ██║     ██╔══██║██╔══██╗██╔═██╗   ║\n"
+    "║  ██║  ██╗███████╗██║  ██║██║  ██║██║  ██╗  ║\n"
+    "║                                              ║\n"
+    "║       P O R T S C O P E  //  TCP RECON       ║\n"
+    "║       [*] map  [*] probe  [*] inspect        ║\n"
+    "╚══════════════════════════════════════════════╝"
+)
+ASCII_STARTUP_BANNER = (
+    "+----------------------------------------------+\n"
+    "|  K  K L      A    H  H  A    CCCC K  K       |\n"
+    "|  K K  L     A A   H  H A A  C     K K        |\n"
+    "|  KK   L    AAAAA  HHHH AAAAA C     KK        |\n"
+    "|  K K  L    A   A  H  H A   A C     K K       |\n"
+    "|  K  K LLLL A   A  H  H A   A  CCCC K  K      |\n"
+    "|                                              |\n"
+    "|       P O R T S C O P E  //  TCP RECON       |\n"
+    "|       [*] map  [*] probe  [*] inspect        |\n"
+    "+----------------------------------------------+"
+)
+
 # Ordered by general TCP prevalence. --top-ports keeps this order.
 TOP_PORTS = [
     80, 443, 22, 21, 25, 3389, 110, 445, 139, 143,
@@ -650,7 +675,7 @@ def build_parser() -> argparse.ArgumentParser:
     format_group.add_argument("--json", action="store_true", help="emit JSON")
     format_group.add_argument("--csv", action="store_true", help="emit CSV")
     parser.add_argument("--output", metavar="FILE", help="write results to FILE")
-    parser.add_argument("--quiet", action="store_true", help="suppress the ASCII banner")
+    parser.add_argument("--quiet", action="store_true", help="suppress the startup banner")
     display_group = parser.add_mutually_exclusive_group()
     display_group.add_argument("--verbose", action="store_true", help="show open, closed, and filtered ports")
     display_group.add_argument("--open-only", action="store_true", help="show only open ports")
@@ -665,15 +690,32 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _stream_supports_text(stream: object, value: str) -> bool:
+    """Return whether a text stream can encode a specific Unicode string."""
+    encoding = getattr(stream, "encoding", None)
+    if encoding is None:
+        return True
+    try:
+        value.encode(encoding)
+    except (LookupError, UnicodeEncodeError):
+        return False
+    return True
+
+
+def startup_banner_for_stream(stream: object) -> str:
+    """Choose the Unicode startup banner, or ASCII when the terminal cannot encode it."""
+    if _stream_supports_text(stream, UNICODE_STARTUP_BANNER):
+        return UNICODE_STARTUP_BANNER
+    return ASCII_STARTUP_BANNER
+
+
 def print_startup(quiet: bool) -> None:
     """Print branding and the mandatory responsible-use warning to stderr."""
     if not quiet:
-        sys.stderr.write(
-            "+---------------------+\n"
-            "| klahack-portscope   |\n"
-            "| by klahack          |\n"
-            "+---------------------+\n"
-        )
+        try:
+            sys.stderr.write(startup_banner_for_stream(sys.stderr) + "\n")
+        except UnicodeEncodeError:
+            sys.stderr.write(ASCII_STARTUP_BANNER + "\n")
     sys.stderr.write(LEGAL_WARNING + "\n")
     sys.stderr.flush()
 

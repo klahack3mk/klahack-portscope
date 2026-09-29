@@ -645,8 +645,10 @@
       font-size: clamp(.72rem, 1.55vw, .86rem);
       line-height: 1.75;
       color: var(--cream);
-      white-space: pre-wrap;
-      word-break: break-word;
+      white-space: pre;
+      word-break: normal;
+      direction: ltr;
+      text-align: left;
       tab-size: 2;
     }
     .terminal-body .t-prompt { color: var(--acid); }
@@ -1239,6 +1241,16 @@
                 <span class="terminal-title">klahack-portscope — authorized loopback audit</span>
               </div>
               <pre class="terminal-body" id="terminal-body" tabindex="0" role="tabpanel" aria-labelledby="fmt-table">$ klahack-portscope -t 127.0.0.1 -p 22,80,443,8080 --banner
+╔══════════════════════════════════════════════╗
+║  ██╗  ██╗██╗      █████╗ ██████╗ ██╗  ██╗  ║
+║  ██║ ██╔╝██║     ██╔══██╗██╔══██╗██║ ██╔╝  ║
+║  █████╔╝ ██║     ███████║██████╔╝█████╔╝   ║
+║  ██╔═██╗ ██║     ██╔══██║██╔══██╗██╔═██╗   ║
+║  ██║  ██╗███████╗██║  ██║██║  ██║██║  ██╗  ║
+║                                              ║
+║       P O R T S C O P E  //  TCP RECON       ║
+║       [*] map  [*] probe  [*] inspect        ║
+╚══════════════════════════════════════════════╝
 ! Scan only networks you own or are explicitly authorized to test.
 Target: 127.0.0.1 (127.0.0.1)
 PORT   STATE      SERVICE          BANNER
@@ -1345,7 +1357,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
             <span class="split" data-i18n="usageTitleA">Start narrow.</span>
             <span class="split italic-serif" data-i18n="usageTitleB">Widen only with permission.</span>
           </h2>
-          <p class="lede" data-i18n="usageIntro">Every invocation prints a compact brand banner to stderr unless --quiet is supplied. These examples use loopback or private addresses only.</p>
+          <p class="lede" data-i18n="usageIntro">Every invocation prints the startup brand banner to stderr unless --quiet is supplied. These examples use loopback or private addresses only.</p>
         </div>
 
         <div class="code-wrap reveal" style="margin-block-end:clamp(1.4rem,3vw,2.2rem)"><pre><code>klahack-portscope -t TARGET (-p PORTS | --top-ports N) [options]</code></pre><button class="copy-btn" type="button" data-copy-text="klahack-portscope -t TARGET (-p PORTS | --top-ports N) [options]" data-i18n="copy">Copy</button></div>
@@ -1400,7 +1412,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
               <tr><th scope="row"><code>--banner</code></th><td data-i18n="optBanner">Passively read up to 256 bytes; try a basic HTTP HEAD request when appropriate.</td></tr>
               <tr><th scope="row"><code>--json / --csv</code></th><td data-i18n="optFormat">Select machine-readable output.</td></tr>
               <tr><th scope="row"><code>--output FILE</code></th><td data-i18n="optOutput">Write the selected output to a file instead of stdout.</td></tr>
-              <tr><th scope="row"><code>--quiet</code></th><td data-i18n="optQuiet">Suppress the ASCII brand banner and progress; the legal warning remains.</td></tr>
+              <tr><th scope="row"><code>--quiet</code></th><td data-i18n="optQuiet">Suppress the startup brand banner and progress; the legal warning remains.</td></tr>
               <tr><th scope="row"><code>--verbose</code></th><td data-i18n="optVerbose">Include open, closed, and filtered result rows.</td></tr>
               <tr><th scope="row"><code>--open-only</code></th><td data-i18n="optOpenOnly">Include only open result rows.</td></tr>
               <tr><th scope="row"><code>--no-color</code></th><td data-i18n="optNoColor">Disable ANSI result colors.</td></tr>
@@ -1665,7 +1677,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
         uninstallTitle: "Verify a checksum manually", uninstallIntro: "Compare the digest yourself before running anything.",
         usageEyebrow: "Usage",
         usageTitleA: "Start narrow.", usageTitleB: "Widen only with permission.",
-        usageIntro: "Every invocation prints a compact brand banner to stderr unless --quiet is supplied. These examples use loopback or private addresses only.",
+        usageIntro: "Every invocation prints the startup brand banner to stderr unless --quiet is supplied. These examples use loopback or private addresses only.",
         ex1: "Scan selected loopback ports, including a small range",
         ex2: "Scan the 20 most prevalent ports on localhost and emit JSON",
         ex3: "Throttle an authorized private-network scan and save CSV",
@@ -1684,7 +1696,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
         optBanner: "Passively read up to 256 bytes; try a basic HTTP HEAD request when appropriate.",
         optFormat: "Select machine-readable output.",
         optOutput: "Write the selected output to a file instead of stdout.",
-        optQuiet: "Suppress the ASCII brand banner and progress; the legal warning remains.",
+        optQuiet: "Suppress the startup brand banner and progress; the legal warning remains.",
         optVerbose: "Include open, closed, and filtered result rows.",
         optOpenOnly: "Include only open result rows.",
         optNoColor: "Disable ANSI result colors.",
@@ -1790,7 +1802,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
         uninstallTitle: "تحقق يدويًا من البصمة", uninstallIntro: "قارن البصمة بنفسك قبل تشغيل أي شيء.",
         usageEyebrow: "الاستخدام",
         usageTitleA: "ابدأ بنطاق ضيق.", usageTitleB: "ولا توسّعه إلا بتصريح.",
-        usageIntro: "يطبع كل تشغيل شعارًا مختصرًا على stderr ما لم تستخدم ‎--quiet‎. تستخدم هذه الأمثلة العنوان المحلي أو عناوين خاصة فقط.",
+        usageIntro: "يطبع كل تشغيل شعار بدء التشغيل على stderr ما لم تستخدم ‎--quiet‎. تستخدم هذه الأمثلة العنوان المحلي أو عناوين خاصة فقط.",
         ex1: "فحص منافذ محددة على العنوان المحلي مع مدى صغير",
         ex2: "فحص أشهر 20 منفذًا على localhost وإخراج JSON",
         ex3: "إبطاء فحص مصرّح به لشبكة خاصة وحفظ CSV",
@@ -1809,7 +1821,7 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
         optBanner: "قراءة سلبية حتى 256 بايت، مع طلب HTTP HEAD بسيط عند الاقتضاء.",
         optFormat: "اختيار مخرجات قابلة للمعالجة آليًا.",
         optOutput: "كتابة المخرجات المختارة في ملف بدل stdout.",
-        optQuiet: "إخفاء شعار ASCII والتقدم؛ ويبقى التحذير القانوني ظاهرًا.",
+        optQuiet: "إخفاء شعار بدء التشغيل والتقدم؛ ويبقى التحذير القانوني ظاهرًا.",
         optVerbose: "تضمين صفوف النتائج المفتوحة والمغلقة والمصفّاة.",
         optOpenOnly: "تضمين صفوف المنافذ المفتوحة فقط.",
         optNoColor: "تعطيل ألوان ANSI في النتائج.",
@@ -2463,10 +2475,16 @@ Summary: open=2 closed=1 filtered=1 scanned=4 duration=1.008s</pre>
     var OUTPUTS = {
       table: [
         { cls: "t-prompt", text: "$ klahack-portscope -t 127.0.0.1 -p 22,80,443,8080 --banner", type: true },
-        { cls: "t-brand", text: "  +------------------------------------+" },
-        { cls: "t-brand", text: "  |  klahack-portscope 1.0.0           |" },
-        { cls: "t-brand", text: "  |  by klahack · TCP connect scanner  |" },
-        { cls: "t-brand", text: "  +------------------------------------+" },
+        { cls: "t-brand", text: "╔══════════════════════════════════════════════╗" },
+        { cls: "t-brand", text: "║  ██╗  ██╗██╗      █████╗ ██████╗ ██╗  ██╗  ║" },
+        { cls: "t-brand", text: "║  ██║ ██╔╝██║     ██╔══██╗██╔══██╗██║ ██╔╝  ║" },
+        { cls: "t-brand", text: "║  █████╔╝ ██║     ███████║██████╔╝█████╔╝   ║" },
+        { cls: "t-brand", text: "║  ██╔═██╗ ██║     ██╔══██║██╔══██╗██╔═██╗   ║" },
+        { cls: "t-brand", text: "║  ██║  ██╗███████╗██║  ██║██║  ██║██║  ██╗  ║" },
+        { cls: "t-brand", text: "║                                              ║" },
+        { cls: "t-brand", text: "║       P O R T S C O P E  //  TCP RECON       ║" },
+        { cls: "t-brand", text: "║       [*] map  [*] probe  [*] inspect        ║" },
+        { cls: "t-brand", text: "╚══════════════════════════════════════════════╝" },
         { cls: "t-warn", text: "! Scan only networks you own or are explicitly authorized to test." },
         { cls: "t-dim", text: "" },
         { cls: "t-dim", text: "Target: 127.0.0.1 (127.0.0.1)" },

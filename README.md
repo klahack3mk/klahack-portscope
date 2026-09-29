@@ -76,7 +76,7 @@ python3 klahack_portscope.py -t 127.0.0.1 -p 22,80,443
 klahack-portscope -t TARGET (-p PORTS | --top-ports N) [options]
 ```
 
-Every invocation prints a compact brand banner to stderr unless `--quiet` is supplied. The responsible-use warning is always printed, including in quiet mode.
+Every invocation prints the startup brand banner to stderr unless `--quiet` is supplied. The responsible-use warning is always printed, including in quiet mode; terminals that cannot encode the Unicode art receive an ASCII fallback.
 
 | Option | Description |
 |---|---|
@@ -90,7 +90,7 @@ Every invocation prints a compact brand banner to stderr unless `--quiet` is sup
 | `--banner` | Passively read up to 256 bytes; try a basic HTTP `HEAD` request when appropriate. |
 | `--json` / `--csv` | Select machine-readable output. |
 | `--output FILE` | Write selected output to a file instead of stdout. |
-| `--quiet` | Suppress the ASCII brand banner and progress; the legal warning remains. |
+| `--quiet` | Suppress the startup brand banner and progress; the legal warning remains. |
 | `--verbose` | Include open, closed, and filtered result rows. |
 | `--open-only` | Include only open result rows. |
 | `--no-color` | Disable ANSI result colors. |
